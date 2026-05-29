@@ -1,0 +1,11 @@
+# Lobby items configuration
+# Slot numbers (0-35 for main inventory, 36-44 for armor)
+items:
+  0:
+    material: "COMPASS"
+    display-name: "<red>Sword"
+    command: "sword"
+  8:
+    material: "PLAYER_HEAD"
+    display-name: "<red>Stats"
+    command: "stats"

@@ -1,19 +1,27 @@
 package site.zvolcan.fFAUtils.managers;
 
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import site.zvolcan.fFAUtils.FFAUtils;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 
-public final class LobbyManager {
+public final class LobbyManager implements Listener {
 
-    private final JavaPlugin plugin;
+    private final FFAUtils plugin;
+    private final Map<Material, String> commands = new HashMap<>();
 
-    public LobbyManager(@NotNull JavaPlugin plugin) {
+    public LobbyManager(@NotNull FFAUtils plugin) {
         this.plugin = plugin;
     }
 
@@ -36,8 +44,7 @@ public final class LobbyManager {
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(itemsFile);
 
-        loadItemsSection(player, config, "items");
-        loadArmorSection(player, config);
+        loadItemsSection(player, config);
     }
 
     private File findItemsFile() {
@@ -49,9 +56,9 @@ public final class LobbyManager {
 
         // Try resource in jar
         try {
-            java.net.URL resource = plugin.getClassLoader().getResource("spawn-lobby-items.yml");
-            if (resource != null) {
-                return new File(resource.toURI());
+            java.io.InputStream stream = plugin.getResource("spawn-lobby-items.yml");
+            if (stream != null) {
+                return new File(stream.toString());
             }
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Could not load spawn-lobby-items.yml", e);
@@ -59,13 +66,21 @@ public final class LobbyManager {
         return null;
     }
 
-    private void loadItemsSection(Player player, YamlConfiguration config, String section) {
-        if (!config.contains(section)) return;
+    private void loadItemsSection(Player player, YamlConfiguration config) {
+        if (!config.contains("items")) return;
 
-        for (String key : config.getConfigurationSection(section).getKeys(false)) {
+        for (String key : Objects.requireNonNull(config.getConfigurationSection("items")).getKeys(false)) {
             try {
+                Material mat = Material.getMaterial(config.getString("items" + "." + key + ".material", "COMPASS"));
+                if (mat == null) return;
                 int slot = Integer.parseInt(key);
-                ItemStack item = config.getItemStack(section + "." + key);
+                final ItemStack item = plugin.getUtils().ib(mat).
+                        name(config.getString("items" + "." + key + ".name")).build();
+
+                if (config.isString("items" + "." + key + ".command")) {
+                    commands.put(mat, "items" + "." + key + ".command");
+                }
+
                 if (item != null) {
                     player.getInventory().setItem(slot, item);
                 }
@@ -75,17 +90,13 @@ public final class LobbyManager {
         }
     }
 
-    private void loadArmorSection(Player player, YamlConfiguration config) {
-        if (!config.contains("armor")) return;
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        final ItemStack item = event.getItem();
+        if (item == null) return;
 
-        ItemStack helmet = config.getItemStack("armor.helmet");
-        ItemStack chestplate = config.getItemStack("armor.chestplate");
-        ItemStack leggings = config.getItemStack("armor.leggings");
-        ItemStack boots = config.getItemStack("armor.boots");
-
-        if (helmet != null) player.getInventory().setHelmet(helmet);
-        if (chestplate != null) player.getInventory().setChestplate(chestplate);
-        if (leggings != null) player.getInventory().setLeggings(leggings);
-        if (boots != null) player.getInventory().setBoots(boots);
+        if (commands.containsKey(item.getType())) {
+            event.getPlayer().performCommand("/" + commands.get(item.getType()));
+        }
     }
 }
