@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import me.putindeer.api.util.PluginUtils;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
+import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.managers.*;
 
 public class FFAUtils extends JavaPlugin {
@@ -20,6 +21,8 @@ public class FFAUtils extends JavaPlugin {
     private LobbyManager lobbyManager;
     @Getter
     private PlayersManager playersManager;
+    @Getter
+    private DeathEventManager deathEventManager;
 
     @Override
     public void onEnable() {
@@ -34,6 +37,12 @@ public class FFAUtils extends JavaPlugin {
         lobbyManager = new LobbyManager(this);
         getServer().getPluginManager().registerEvents(new PlayerConnectListener(this, lobbyManager, playersManager), this);
         getServer().getPluginManager().registerEvents(lobbyManager, this);
+        
+        deathEventManager = new DeathEventManager(this);
+        saveResource("death-events.yml", false);
+        deathEventManager.registerDeathEvents();
+        getServer().getPluginManager().registerEvents(
+            new PlayerDeathListener(deathEventManager), this);
     }
 
     @Override

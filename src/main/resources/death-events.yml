@@ -1,0 +1,28 @@
+# DeathEventManager configuration
+# Events are selected randomly with equal probability when a player dies
+
+events:
+  lightning:
+    message: "<yellow>{player} was struck by lightning!"
+    broadcast: true
+    effect: LIGHTNING
+
+  void:
+    message: "<red>{player} fell into the void!"
+    broadcast: true
+    effect: NONE
+
+  explosion:
+    message: "<gold>{player} exploded spectacularly!"
+    broadcast: true
+    effect: NONE
+
+  suicide:
+    message: "<gray>{player} gave up..."
+    broadcast: true
+    effect: NONE
+
+  default:
+    message: "<white>{player} died."
+    broadcast: true
+    effect: NONE

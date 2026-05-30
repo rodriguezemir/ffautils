@@ -1,0 +1,6 @@
+name: FFAUtils
+version: '${version}'
+
+main: site.zvolcan.fFAUtils.FFAUtils
+api-version: '26.1.2'
+load: POSTWORLD
