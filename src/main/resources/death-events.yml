@@ -1,0 +1,5 @@
+# DeathEventManager configuration
+# Events are selected randomly with equal probability when a player dies
+
+messages:
+  - "{entity} has dead for {killer} with {health}hp."

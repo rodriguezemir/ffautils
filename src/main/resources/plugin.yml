@@ -1,0 +1,4 @@
+name: FFAUtils
+version: '${version}'
+main: site.zvolcan.fFAUtils.FFAUtils
+api-version: '1.21'
