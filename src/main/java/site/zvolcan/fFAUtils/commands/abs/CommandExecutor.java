@@ -6,5 +6,5 @@ import org.bukkit.command.CommandSender;
 
 @FunctionalInterface
 public interface CommandExecutor {
-    LiteralCommandNode<CommandSourceStack> execute(CommandSender sender, String[] args);
+    LiteralCommandNode<CommandSourceStack> execute();
 }
