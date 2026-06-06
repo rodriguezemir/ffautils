@@ -1,7 +1,6 @@
 package site.zvolcan.fFAUtils.objects;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 

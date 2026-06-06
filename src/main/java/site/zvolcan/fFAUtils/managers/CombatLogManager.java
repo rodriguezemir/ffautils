@@ -1,7 +1,6 @@
 package site.zvolcan.fFAUtils.managers;
 
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import site.zvolcan.fFAUtils.FFAUtils;

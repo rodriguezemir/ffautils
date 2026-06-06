@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.FFAUtils;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public final class FFAPlayer {

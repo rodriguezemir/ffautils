@@ -1,8 +1,8 @@
 package site.zvolcan.fFAUtils;
 
 import lombok.Getter;
-import org.bukkit.plugin.java.JavaPlugin;
 import me.putindeer.api.util.PluginUtils;
+import org.bukkit.plugin.java.JavaPlugin;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.managers.*;
@@ -10,7 +10,7 @@ import site.zvolcan.fFAUtils.managers.*;
 public class FFAUtils extends JavaPlugin {
 
     @Getter
-    public static FFAUtils instance;
+    private static FFAUtils instance;
 
     @Getter
     private PluginUtils utils;
