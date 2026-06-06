@@ -9,6 +9,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
     maven("https://repo.codemc.io/repository/maven-public/")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 dependencies {
@@ -19,6 +20,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
 
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("me.clip:placeholderapi:2.12.2")
+
     implementation("com.github.putindeer:mcdev-utils:1.0.28")
     implementation("com.google.code.gson:gson:2.14.0")
     implementation("com.zaxxer:HikariCP:7.0.2")
