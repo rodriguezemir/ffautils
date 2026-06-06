@@ -9,26 +9,29 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import site.zvolcan.fFAUtils.FFAUtils;
-import site.zvolcan.fFAUtils.managers.CombatLogManager;
-import site.zvolcan.fFAUtils.managers.LobbyManager;
-import site.zvolcan.fFAUtils.managers.PlayersManager;
+import site.zvolcan.fFAUtils.managers.*;
 
 public class PlayerConnectListener implements Listener {
 
     private final CombatLogManager combatLogManager;
     private final LobbyManager lobbyManager;
     private final PlayersManager playersManager;
+    private final SpawnManager spawnManager;
+    private final StatsManager statsManager;
 
-    public PlayerConnectListener(@NotNull FFAUtils plugin, LobbyManager lobbyManager, PlayersManager playersManager) {
+    public PlayerConnectListener(@NotNull FFAUtils plugin, LobbyManager lobbyManager, PlayersManager playersManager, SpawnManager spawnManager, StatsManager statsManager) {
         this.lobbyManager = lobbyManager;
         this.playersManager = playersManager;
         this.combatLogManager = plugin.getCombatLogManager();
+        this.spawnManager = spawnManager;
+        this.statsManager = statsManager;
     }
 
     @EventHandler
     public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         final Player player = event.getPlayer();
         playersManager.removePlayer(player);
+        statsManager.unloadPlayer(player.getUniqueId());
         if (combatLogManager.isInCombat(player.getUniqueId())) {
             player.setHealth(0);
         }
@@ -47,5 +50,6 @@ public class PlayerConnectListener implements Listener {
         final Player player = event.getPlayer();
         playersManager.createPlayer(player);
         lobbyManager.addLobbyItems(player);
+        player.teleport(spawnManager.getLobbySpawn());
     }
 }
