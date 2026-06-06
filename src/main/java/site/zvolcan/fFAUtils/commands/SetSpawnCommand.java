@@ -9,6 +9,7 @@ import me.putindeer.api.util.PluginUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
+import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
@@ -29,14 +30,17 @@ public final class SetSpawnCommand implements CommandExecutor {
             CommandSourceStack source = ctx.getSource();
             CommandSender sender = source.getSender();
             if (!(sender instanceof Player player)) {
-                sender.sendMessage("Only players can execute this command.");
+                sender.sendMessage(MessagesManager.getInstance()
+                        .getMessage("only-players-execute"));
                 return 1;
             }
             String spawnName = StringArgumentType.getString(ctx, "name");
             spawnManager.saveSpawn(spawnName, player.getLocation());
             utils.message(player,
                     Sounds.SUCCESS_SOUND,
-                    "<green>Spawn '" + spawnName + "' has been set."
+                    MessagesManager.getInstance().getMessage(
+                            "save-spawn", "{spawn}", spawnName
+                    )
             );
             return 0;
         }));

@@ -19,7 +19,8 @@ import java.util.logging.Level;
 public final class LobbyManager implements Listener {
 
     private final FFAUtils plugin;
-    private final Map<ItemStack, String> items = new HashMap<>();
+    private final Map<Material, String> commands = new HashMap<>();
+    private final Map<Integer, ItemStack> items = new HashMap<>();
 
     public LobbyManager(@NotNull FFAUtils plugin) {
         this.plugin = plugin;
@@ -31,20 +32,16 @@ public final class LobbyManager implements Listener {
      * Clears armor and restores it from config.
      */
     public void addLobbyItems(@NotNull Player player) {
-        // Clear inventory and armor
         player.getInventory().clear();
-        player.getInventory().setHelmet(null);
-        player.getInventory().setChestplate(null);
-        player.getInventory().setLeggings(null);
-        player.getInventory().setBoots(null);
-
         loadPlayerItems(player);
     }
 
     public void loadPlayerItems(@NotNull Player player) {
-        for (ItemStack item : items.keySet()) {
+        for (int i : items.keySet()) {
+            final ItemStack item = items.get(i);
+
             if (item == null) continue;
-            player.getInventory().addItem(item);
+            player.getInventory().setItem(i, item);
         }
     }
 
@@ -86,7 +83,8 @@ public final class LobbyManager implements Listener {
                         name(config.getString("items" + "." + key + ".name")).build();
 
                 if (config.isString("items" + "." + key + ".command")) {
-                    items.put(item, "items" + "." + key + ".command");
+                    items.put(slot, item);
+                    commands.put(item.getType(), config.getString("items" + "." + key + ".command"));
                 }
             } catch (NumberFormatException e) {
                 plugin.getLogger().log(Level.WARNING, "Invalid slot key: " + key);
@@ -99,8 +97,8 @@ public final class LobbyManager implements Listener {
         final ItemStack item = event.getItem();
         if (item == null) return;
 
-        if (items.containsKey(item.getType())) {
-            event.getPlayer().performCommand("/" + items.get(item.getType()));
+        if (commands.containsKey(item.getType())) {
+            event.getPlayer().performCommand("/" + commands.get(item.getType()));
         }
     }
 }

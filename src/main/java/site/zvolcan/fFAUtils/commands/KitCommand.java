@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
 import site.zvolcan.fFAUtils.managers.KitManager;
+import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.objects.Kit;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
@@ -34,7 +35,8 @@ public final class KitCommand implements CommandExecutor {
             CommandSourceStack source = ctx.getSource();
             CommandSender sender = source.getSender();
             if (!(sender instanceof Player player)) {
-                sender.sendMessage("Only players can execute this command.");
+                sender.sendMessage(MessagesManager.getInstance()
+                        .getMessage("only-players-execute"));
                 return 1;
             }
             String name = StringArgumentType.getString(ctx, "name");
@@ -45,6 +47,7 @@ public final class KitCommand implements CommandExecutor {
             }
             player.getInventory().setContents(kit.getContents());
             plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<green>Kit '" + name + "' has been applied.");
+
             return 1;
         }));
 
@@ -53,7 +56,8 @@ public final class KitCommand implements CommandExecutor {
                 CommandSourceStack source = ctx.getSource();
                 CommandSender sender = source.getSender();
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("Only players can execute this command.");
+                    sender.sendMessage(MessagesManager.getInstance()
+                            .getMessage("only-players-execute"));
                     return 1;
                 }
                 String name = StringArgumentType.getString(ctx, "name");
@@ -74,7 +78,8 @@ public final class KitCommand implements CommandExecutor {
                 CommandSourceStack source = ctx.getSource();
                 CommandSender sender = source.getSender();
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("Only players can execute this command.");
+                    sender.sendMessage(MessagesManager.getInstance()
+                            .getMessage("only-players-execute"));
                     return 1;
                 }
                 String name = StringArgumentType.getString(ctx, "name");
@@ -97,7 +102,15 @@ public final class KitCommand implements CommandExecutor {
                 String name = StringArgumentType.getString(ctx, "name");
                 boolean deleted = kitManager.deleteKit(name);
                 if (!deleted) {
-                    sender.sendMessage(Component.text("Kit '" + name + "' not found.").color(NamedTextColor.RED));
+                    plugin.getUtils().message(
+                            sender,
+                            MessagesManager.getInstance().getMessage(
+                                    "kit-not-found",
+                                    "{kit}",
+                                    name
+                            )
+                    );
+                    sender.sendMessage(Component.text().color(NamedTextColor.RED));
                     return 1;
                 }
                 sender.sendMessage(Component.text("Kit '" + name + "' has been deleted.").color(NamedTextColor.GREEN));
@@ -110,7 +123,12 @@ public final class KitCommand implements CommandExecutor {
             CommandSender sender = source.getSender();
             var kits = kitManager.getAllKits();
             if (kits.isEmpty()) {
-                sender.sendMessage(Component.text("No kits available.").color(NamedTextColor.RED));
+                plugin.getUtils().message(
+                        sender,
+                        MessagesManager.getInstance().getMessage(
+                                "no-kits-available"
+                        )
+                );
                 return 1;
             }
             sender.sendMessage(Component.text("Kits: " + String.join(", ", kits.keySet())).color(NamedTextColor.GREEN));

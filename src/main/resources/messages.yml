@@ -1,0 +1,5 @@
+messages-prefix: "<b><gradient:#5472F4:#27A2C1>FFAUTILS</gradient></b> <dark_gray>▶️</dark_gray> "
+only-players-execute: "Only players can execute this command."
+save-spawn: "<green>Spawn {spawn} has been set."
+no-kits-available: "<red>No kits available."
+kit-not-found: "<red>Kit {name} not found."

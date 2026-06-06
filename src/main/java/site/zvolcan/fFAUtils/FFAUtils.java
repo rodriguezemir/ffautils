@@ -30,6 +30,10 @@ public class FFAUtils extends JavaPlugin {
     private CommandManager commandManager;
     @Getter
     private StatsManager statsManager;
+    @Getter
+    private FFAPlaceholders ffaPlaceholders;
+    @Getter
+    private MessagesManager messagesManager;
 
     @Override
     public void onEnable() {
@@ -44,10 +48,14 @@ public class FFAUtils extends JavaPlugin {
         combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks", 300L));
         combatLogManager.startCleanupTask();
         lobbyManager = new LobbyManager(this);
-        commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager);
         playersManager = new PlayersManager();
         statsManager = new StatsManager(this);
         statsManager.init();
+        messagesManager = new MessagesManager(this);
+        messagesManager.registerMessages();
+        ffaPlaceholders = new FFAPlaceholders(this, statsManager);
+        ffaPlaceholders.register();
+        commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders, playersManager);
         getServer().getPluginManager().registerEvents(new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager, statsManager), this);
         getServer().getPluginManager().registerEvents(lobbyManager, this);
         
@@ -62,5 +70,6 @@ public class FFAUtils extends JavaPlugin {
     @Override
     public void onDisable() {
         statsManager.close();
+        messagesManager.saveMessages();
     }
 }
