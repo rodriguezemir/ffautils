@@ -22,7 +22,16 @@ public class CombatLogManager {
 
     /** Marks a player as in combat */
     public void setInCombat(@NotNull UUID playerId) {
-        combatEndTimes.put(playerId, System.currentTimeMillis() + (combatTimeoutTicks * 50L));
+        long currentTime = System.currentTimeMillis();
+        Long time = combatEndTimes.put(playerId, currentTime + (combatTimeoutTicks * 50L));
+        if (time == null) return;
+
+        if (currentTime < time) {
+            plugin.getUtils().message(
+                    plugin.getServer().getPlayer(playerId),
+                    "<yellow>You are now in combat. Do not logout!"
+            );
+        }
     }
 
     /** Checks if player is currently in combat */
