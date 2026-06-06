@@ -1,14 +1,18 @@
 package site.zvolcan.fFAUtils.managers;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -22,9 +26,9 @@ public class SpawnManager {
         this.plugin = plugin;
     }
 
-    /** Saves a spawn location to memory and persists to spawns.yml */
+    /** Saves a spawn location to memory and persists to disk */
     public boolean saveSpawn(@NotNull String name, Location location) {
-        if (name == null || name.isEmpty()) {
+        if (name.isEmpty()) {
             return false;
         }
         if (location == null || location.getWorld() == null) {
@@ -46,7 +50,7 @@ public class SpawnManager {
         return Collections.unmodifiableMap(new HashMap<>(spawns));
     }
 
-    /** Deletes a spawn and persists the change */
+    /** Deletes a spawn, removes its file, and persists the change */
     public boolean deleteSpawn(String name) {
         if (name == null || name.isEmpty()) {
             return false;
@@ -55,12 +59,18 @@ public class SpawnManager {
         boolean existed = spawns.containsKey(name);
         if (existed) {
             spawns.remove(name);
+
+            File spawnFile = new File(new File(plugin.getDataFolder(), "spawns"), name + ".json");
+            if (spawnFile.exists()) {
+                spawnFile.delete();
+            }
+
             persistSpawns();
         }
         return existed;
     }
 
-    /** Loads all spawns from spawns.yml */
+    /** Loads all spawns from the spawns folder */
     public void loadAllSpawns() {
         spawns.clear();
 
@@ -70,34 +80,38 @@ public class SpawnManager {
             return;
         }
 
-        File spawnsFile = new File(dataFolder, "spawns.yml");
-        if (!spawnsFile.exists()) {
+        File spawnsFolder = new File(dataFolder, "spawns");
+        if (!spawnsFolder.exists() || !spawnsFolder.isDirectory()) {
             return;
         }
 
-        try {
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(spawnsFile);
-            if (config.contains("spawns")) {
-                for (String key : config.getConfigurationSection("spawns").getKeys(false)) {
-                    String path = "spawns." + key;
-                    String worldName = config.getString(path + ".world");
-                    if (worldName == null) continue;
+        File[] spawnFiles = spawnsFolder.listFiles((dir, name) -> name.endsWith(".json"));
+        if (spawnFiles == null) {
+            return;
+        }
 
-                    org.bukkit.World world = plugin.getServer().getWorld(worldName);
-                    if (world == null) continue;
+        Gson gson = new GsonBuilder().create();
 
-                    double x = config.getDouble(path + ".x");
-                    double y = config.getDouble(path + ".y");
-                    double z = config.getDouble(path + ".z");
-                    float yaw = (float) config.getDouble(path + ".yaw");
-                    float pitch = (float) config.getDouble(path + ".pitch");
+        for (File spawnFile : spawnFiles) {
+            String spawnName = spawnFile.getName().replace(".json", "");
+            try (FileReader reader = new FileReader(spawnFile)) {
+                Map<String, Object> data = gson.fromJson(reader, Map.class);
+                String worldName = (String) data.get("world");
+                if (worldName == null) continue;
 
-                    Location location = new Location(world, x, y, z, yaw, pitch);
-                    spawns.put(key, location);
-                }
+                org.bukkit.World world = plugin.getServer().getWorld(worldName);
+                if (world == null) continue;
+
+                double x = ((Number) data.get("x")).doubleValue();
+                double y = ((Number) data.get("y")).doubleValue();
+                double z = ((Number) data.get("z")).doubleValue();
+                float yaw = ((Number) data.get("yaw")).floatValue();
+                float pitch = ((Number) data.get("pitch")).floatValue();
+
+                spawns.put(spawnName, new Location(world, x, y, z, yaw, pitch));
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING, "Failed to load spawn file: " + spawnFile.getName(), e);
             }
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to load spawns.yml", e);
         }
     }
 
@@ -106,31 +120,36 @@ public class SpawnManager {
         loadAllSpawns();
     }
 
-    /** Persists spawns to spawns.yml */
+    /** Persists each spawn to its own file in the spawns folder */
     private void persistSpawns() {
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
 
-        File spawnsFile = new File(dataFolder, "spawns.yml");
-        YamlConfiguration config = new YamlConfiguration();
-
-        for (Map.Entry<String, Location> entry : spawns.entrySet()) {
-            Location loc = entry.getValue();
-            String path = "spawns." + entry.getKey();
-            config.set(path + ".world", loc.getWorld().getName());
-            config.set(path + ".x", loc.getX());
-            config.set(path + ".y", loc.getY());
-            config.set(path + ".z", loc.getZ());
-            config.set(path + ".yaw", loc.getYaw());
-            config.set(path + ".pitch", loc.getPitch());
+        File spawnsFolder = new File(dataFolder, "spawns");
+        if (!spawnsFolder.exists()) {
+            spawnsFolder.mkdirs();
         }
 
-        try {
-            config.save(spawnsFile);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to save spawns.yml", e);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        for (Map.Entry<String, Location> entry : spawns.entrySet()) {
+            File spawnFile = new File(spawnsFolder, entry.getKey() + ".json");
+            Location loc = entry.getValue();
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("world", loc.getWorld().getName());
+            data.put("x", loc.getX());
+            data.put("y", loc.getY());
+            data.put("z", loc.getZ());
+            data.put("yaw", (double) loc.getYaw());
+            data.put("pitch", (double) loc.getPitch());
+
+            try (FileWriter writer = new FileWriter(spawnFile)) {
+                gson.toJson(data, writer);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.WARNING, "Failed to save spawn file: " + spawnFile.getName(), e);
+            }
         }
     }
 
