@@ -18,7 +18,7 @@ import java.util.logging.Level;
 public class DeathEventManager {
 
     private final FFAUtils plugin;
-    private List<String> messages;
+    private final List<String> messages = new ArrayList<>();
 
     public DeathEventManager(@NotNull FFAUtils plugin) {
         this.plugin = plugin;
@@ -51,7 +51,7 @@ public class DeathEventManager {
         try {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(eventsFile);
             if (config.contains("messages") && config.isList("messages")) {
-                this.messages = new ArrayList<>(config.getStringList("messages"));
+                messages.addAll(config.getStringList("messages"));
             }
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Failed to load death-messages.yml", e);
@@ -71,17 +71,19 @@ public class DeathEventManager {
      * @param entity the player who died
      */
     public void broadcastDeathEvent(@NotNull Player entity, @Nullable final Player killer) {
+        if (messages.isEmpty() || killer == null) {
+            return;
+        }
+
         String message =
                 messages.get(ThreadLocalRandom.current().nextInt(messages.size()))
                         .replace("{entity}", entity.getName());
 
-        if (killer != null) {
-            message = message.replace("{killer}", killer.getName())
-                    .replace("{health}",
-                            String.format("%.2f", killer.getHealth())
-                    );
-        }
+        message = message.replace("{killer}", killer.getName())
+                .replace("{health}",
+                        String.format("%.2f", killer.getHealth())
+                );
 
-        plugin.getUtils().broadcast(message);
+        plugin.getUtils().broadcast(false, message);
     }
 }

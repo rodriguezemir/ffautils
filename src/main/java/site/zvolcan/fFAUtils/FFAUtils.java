@@ -10,6 +10,9 @@ import site.zvolcan.fFAUtils.managers.*;
 public class FFAUtils extends JavaPlugin {
 
     @Getter
+    public static FFAUtils instance;
+
+    @Getter
     private PluginUtils utils;
     @Getter
     private SpawnManager spawnManager;
@@ -30,6 +33,8 @@ public class FFAUtils extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
+
         saveDefaultConfig();
         utils = new PluginUtils(this, getConfig().getString("messages-prefix", "<red><b>FFA <reset>"));
         spawnManager = new SpawnManager(this);
@@ -39,11 +44,11 @@ public class FFAUtils extends JavaPlugin {
         combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks", 300L));
         combatLogManager.startCleanupTask();
         lobbyManager = new LobbyManager(this);
-        commandManager = new CommandManager(this, kitManager, spawnManager);
+        commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager);
         playersManager = new PlayersManager();
         statsManager = new StatsManager(this);
         statsManager.init();
-        getServer().getPluginManager().registerEvents(new PlayerConnectListener(this, lobbyManager, playersManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager, statsManager), this);
         getServer().getPluginManager().registerEvents(lobbyManager, this);
         
         deathEventManager = new DeathEventManager(this);

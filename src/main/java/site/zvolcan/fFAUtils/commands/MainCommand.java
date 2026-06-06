@@ -25,6 +25,8 @@ public final class MainCommand implements CommandExecutor {
             CommandSourceStack source = ctx.getSource();
             CommandSender sender = source.getSender();
 
+            // TODO - agregar reinicios
+
             utils.message(
                     sender,
                     Sounds.SUCCESS_SOUND,
