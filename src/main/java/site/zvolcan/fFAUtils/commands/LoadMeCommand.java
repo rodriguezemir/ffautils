@@ -11,7 +11,10 @@ import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
 import site.zvolcan.fFAUtils.managers.KitManager;
+import site.zvolcan.fFAUtils.managers.MessagesManager;
+import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
+import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
@@ -20,11 +23,13 @@ public final class LoadMeCommand implements CommandExecutor {
     private final FFAUtils plugin;
     private final KitManager kitManager;
     private final SpawnManager spawnManager;
+    private final PlayersManager playersManager;
 
-    public LoadMeCommand(FFAUtils plugin, KitManager kitManager, SpawnManager spawnManager) {
+    public LoadMeCommand(FFAUtils plugin, KitManager kitManager, SpawnManager spawnManager, PlayersManager playersManager) {
         this.plugin = plugin;
         this.kitManager = kitManager;
         this.spawnManager = spawnManager;
+        this.playersManager = playersManager;
     }
 
     @Override
@@ -38,7 +43,8 @@ public final class LoadMeCommand implements CommandExecutor {
                         CommandSourceStack source = ctx.getSource();
                         CommandSender sender = source.getSender();
                         if (!(sender instanceof Player player)) {
-                            sender.sendMessage("Only players can execute this command.");
+                            sender.sendMessage(MessagesManager.getInstance()
+                                    .getMessage("only-players-execute"));
                             return 1;
                         }
                         String kitName = StringArgumentType.getString(ctx, "kit");
@@ -55,6 +61,10 @@ public final class LoadMeCommand implements CommandExecutor {
                         }
                         player.getInventory().setContents(kit.getContents());
                         player.teleport(spawn);
+
+                        FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
+                        ffaPlayer.setLastKit(kit);
+                        ffaPlayer.setLastSpawn(spawn);
                         return 1;
                     })
                 )
