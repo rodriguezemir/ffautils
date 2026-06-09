@@ -18,6 +18,8 @@ import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
+import java.util.List;
+
 public final class LoadMeCommand implements CommandExecutor {
 
     private final FFAUtils plugin;
@@ -59,6 +61,15 @@ public final class LoadMeCommand implements CommandExecutor {
                             plugin.getUtils().message(player, Sounds.ERROR_SOUND, "<red>Spawn '" + spawnName + "' not found.");
                             return 1;
                         }
+
+                        // Kit-list validation: check spawn's allowed-kits restriction
+                        List<String> allowedKits = spawnManager.getAllowedKits(spawnName);
+                        if (!SpawnManager.isKitAllowedAtSpawn(allowedKits, kitName)) {
+                            plugin.getUtils().message(player, Sounds.ERROR_SOUND,
+                                    MessagesManager.getInstance().getMessage("kit-not-allowed-for-spawn"));
+                            return 1;
+                        }
+
                         player.getInventory().setContents(kit.getContents());
                         player.teleport(spawn);
 
