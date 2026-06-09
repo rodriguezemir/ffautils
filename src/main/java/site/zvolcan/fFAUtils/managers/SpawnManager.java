@@ -95,6 +95,7 @@ public class SpawnManager {
         for (File spawnFile : spawnFiles) {
             String spawnName = spawnFile.getName().replace(".json", "");
             try (FileReader reader = new FileReader(spawnFile)) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> data = gson.fromJson(reader, Map.class);
                 String worldName = (String) data.get("world");
                 if (worldName == null) continue;
