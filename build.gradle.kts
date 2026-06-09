@@ -25,12 +25,14 @@ dependencies {
     implementation("com.github.putindeer:mcdev-utils:1.0.28")
     implementation("com.google.code.gson:gson:2.14.0")
     implementation("com.zaxxer:HikariCP:7.0.2")
+    implementation("fr.mrmicky:fastinv:3.1.2")
 
     testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.12.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
+    testImplementation("me.clip:placeholderapi:2.12.2")
 }
 
 java {
@@ -51,6 +53,7 @@ tasks {
         relocate("com.github.putindeer", "site.zvolcan.fFFAUtils.libs.utils")
         relocate("com.google.gson", "site.zvolcan.fFFAUtils.libs.gson")
         relocate("com.zaxxer.hikari", "site.zvolcan.fFFAUtils.libs.hikari")
+        relocate("fr.mrmicky.fastinv", "com.yourpackage.fastinv")
     }
 
     runServer {

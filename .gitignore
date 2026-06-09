@@ -22,3 +22,4 @@ run
 # Local Pi runtime state
 .atl/
 .pi
+.vscode
