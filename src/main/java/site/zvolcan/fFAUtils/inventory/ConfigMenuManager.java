@@ -19,7 +19,7 @@ public class ConfigMenuManager {
     }
 
     public void openSpawns(Player player, int page) {
-        // TODO: implement later
+        new SpawnsInventory(this, page).open(player);
     }
 
     public void openKits(Player player, int page) {
@@ -27,7 +27,12 @@ public class ConfigMenuManager {
     }
 
     public void openSpawnDetail(Player player, String spawnName) {
-        // TODO: implement later
+        // Default to page 0 when opening detail from outside
+        new SpawnDetailInventory(this, spawnName, 0).open(player);
+    }
+
+    public void openSpawnDetail(Player player, String spawnName, int previousPage) {
+        new SpawnDetailInventory(this, spawnName, previousPage).open(player);
     }
 
     public void openKitDetail(Player player, String kitName) {

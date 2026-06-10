@@ -35,11 +35,11 @@ Chain strategy: pending
 
 ## Phase 2: Core Implementation
 
-- [ ] 2.1 Create `SpawnsInventory` (54-slot FastInv) with pagination (45 items/page). Render each spawn as item with display name = spawn name, lore = world name. Include back button at slot 49, prev/next page buttons at slots 50/52.
-- [ ] 2.2 Create `SpawnDetailInventory` (27-slot FastInv) showing spawn name, world, coordinates (x, y, z rounded to 1 decimal), and allowed kits (or "All kits"). Back button at slot 22 returns to SpawnsInventory (same page).
+- [x] 2.1 Create `SpawnsInventory` (54-slot FastInv) with pagination (45 items/page). Render each spawn as item with display name = spawn name, lore = world name. Include back button at slot 49, prev/next page buttons at slots 50/52.
+- [x] 2.2 Create `SpawnDetailInventory` (27-slot FastInv) showing spawn name, world, coordinates (x, y, z rounded to 1 decimal), and allowed kits (or "All kits"). Back button at slot 22 returns to SpawnsInventory (same page).
 - [ ] 2.3 Create `KitsInventory` (54-slot FastInv) with pagination (45 items/page). Render each kit as item with display name = kit name, lore = item count. Include back button at slot 49, prev/next page buttons at slots 50/52.
 - [ ] 2.4 Create `KitDetailInventory` (27-slot FastInv) showing kit name and contents as ItemStack previews (actual icons). Back button at slot 22 returns to KitsInventory (same page).
-- [ ] 2.5 Implement navigation callbacks in `ConfigMenuManager`: `openSpawns` creates `SpawnsInventory` and opens for player; `openKits` creates `KitsInventory`; `openSpawnDetail` creates `SpawnDetailInventory`; `openKitDetail` creates `KitDetailInventory`.
+- [x] 2.5 Implement navigation callbacks in `ConfigMenuManager`: `openSpawns` creates `SpawnsInventory` and opens for player; `openKits` creates `KitsInventory`; `openSpawnDetail` creates `SpawnDetailInventory`; `openKitDetail` creates `KitDetailInventory`.
 
 ## Phase 3: Integration / Wiring
 
