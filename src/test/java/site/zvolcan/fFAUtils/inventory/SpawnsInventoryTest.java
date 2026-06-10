@@ -1,5 +1,6 @@
 package site.zvolcan.fFAUtils.inventory;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,6 +45,14 @@ class SpawnsInventoryTest {
         return PlainTextComponentSerializer.plainText().serialize(item.getItemMeta().displayName());
     }
 
+    private static List<String> plainLore(ItemStack item) {
+        List<Component> lore = item.getItemMeta().lore();
+        if (lore == null) return Collections.emptyList();
+        return lore.stream()
+                .map(c -> PlainTextComponentSerializer.plainText().serialize(c))
+                .toList();
+    }
+
     @Test
     void openSpawns_withNoSpawns_shouldShowPlaceholder() {
         when(spawnManager.getAllSpawnsData()).thenReturn(Collections.emptyMap());
@@ -71,7 +80,7 @@ class SpawnsInventoryTest {
         assertEquals(54, inv.getSize());
         assertNotNull(inv.getItem(0), "Spawn item should be present");
         assertEquals("lobby", plainName(inv.getItem(0)));
-        assertTrue(inv.getItem(0).getItemMeta().getLore().contains("world"));
+        assertTrue(plainLore(inv.getItem(0)).contains("world"));
     }
 
     @Test
@@ -164,7 +173,7 @@ class SpawnsInventoryTest {
         configMenuManager.openSpawns(player, 0);
         Inventory inv = player.getOpenInventory().getTopInventory();
         assertNotNull(inv.getItem(0));
-        List<String> lore = inv.getItem(0).getItemMeta().getLore();
+        List<String> lore = plainLore(inv.getItem(0));
         assertNotNull(lore);
         // Should show allowed kits info
         boolean hasKitsInfo = lore.stream().anyMatch(l -> l.contains("archer") || l.contains("Allowed kits"));

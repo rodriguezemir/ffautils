@@ -93,6 +93,10 @@ public class KitManager {
             String kitName = kitFile.getName().replace(".json", "");
             try (FileReader reader = new FileReader(kitFile)) {
                 List<Map<String, Object>> itemsData = gson.fromJson(reader, listType);
+                if (itemsData == null) {
+                    plugin.getLogger().log(Level.WARNING, "Kit file is empty or malformed: " + kitFile.getName());
+                    continue;
+                }
                 List<ItemStack> itemList = new ArrayList<>();
                 for (Map<String, Object> data : itemsData) {
                     if (data == null) continue;
@@ -145,9 +149,7 @@ public class KitManager {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if (key.equals("==")) {
-                result.put(key, value);
-            } else if (value instanceof Double) {
+            if (value instanceof Double) {
                 double d = (Double) value;
                 if (d == Math.floor(d) && !Double.isInfinite(d)) {
                     long l = (long) d;
