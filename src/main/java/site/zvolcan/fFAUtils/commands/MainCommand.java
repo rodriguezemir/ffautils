@@ -72,7 +72,7 @@ public final class MainCommand implements CommandExecutor {
             utils.message(
                     sender,
                     Sounds.SUCCESS_SOUND,
-                    "<green>FFAUtils has been reloaded.");
+                    messagesManager.getMessage("reload-success"));
             return 0;
         }));
 

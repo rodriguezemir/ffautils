@@ -5,8 +5,6 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -43,11 +41,19 @@ public final class KitCommand implements CommandExecutor {
             String name = StringArgumentType.getString(ctx, "name");
             Kit kit = kitManager.getKit(name);
             if (kit == null) {
-                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<red>Kit '" + name + "' not found.");
+                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                        MessagesManager.getInstance().getMessage(
+                                "kit-not-found", "{name}", name
+                        )
+                );
                 return 1;
             }
             player.getInventory().setContents(kit.getContents());
-            plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<green>Kit '" + name + "' has been applied.");
+            plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                    MessagesManager.getInstance().getMessage(
+                            "kit-applied", "{name}", name
+                    )
+            );
 
             return 1;
         }));
@@ -63,13 +69,21 @@ public final class KitCommand implements CommandExecutor {
                 }
                 String name = StringArgumentType.getString(ctx, "name");
                 if (kitManager.getKit(name) != null) {
-                    plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<red>Kit '" + name + "' already exists.");
+                    plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                            MessagesManager.getInstance().getMessage(
+                                    "kit-already-exists", "{name}", name
+                            )
+                    );
                     return 1;
                 }
                 ItemStack[] contents = player.getInventory().getContents();
                 Kit kit = new Kit(name, contents);
                 kitManager.saveKit(name, kit);
-                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<green>Kit '" + name + "' has been created.");
+                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                        MessagesManager.getInstance().getMessage(
+                                "kit-created", "{name}", name
+                        )
+                );
                 return 1;
             }))
         );
@@ -85,13 +99,21 @@ public final class KitCommand implements CommandExecutor {
                 }
                 String name = StringArgumentType.getString(ctx, "name");
                 if (kitManager.getKit(name) == null) {
-                    plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<red>Kit '" + name + "' not found.");
+                    plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                            MessagesManager.getInstance().getMessage(
+                                    "kit-not-found", "{name}", name
+                            )
+                    );
                     return 1;
                 }
                 ItemStack[] contents = player.getInventory().getContents();
                 Kit kit = new Kit(name, contents);
                 kitManager.saveKit(name, kit);
-                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND, "<green>Kit '" + name + "' has been edited.");
+                plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+                        MessagesManager.getInstance().getMessage(
+                                "kit-edited", "{name}", name
+                        )
+                );
                 return 1;
             }))
         );
@@ -107,14 +129,17 @@ public final class KitCommand implements CommandExecutor {
                             sender,
                             MessagesManager.getInstance().getMessage(
                                     "kit-not-found",
-                                    "{kit}",
+                                    "{name}",
                                     name
                             )
                     );
-                    sender.sendMessage(Component.text().color(NamedTextColor.RED));
                     return 1;
                 }
-                sender.sendMessage(Component.text("Kit '" + name + "' has been deleted.").color(NamedTextColor.GREEN));
+                plugin.getUtils().message(sender, Sounds.SUCCESS_SOUND,
+                        MessagesManager.getInstance().getMessage(
+                                "kit-deleted", "{name}", name
+                        )
+                );
                 return 1;
             }))
         );
@@ -132,7 +157,11 @@ public final class KitCommand implements CommandExecutor {
                 );
                 return 1;
             }
-            sender.sendMessage(Component.text("Kits: " + String.join(", ", kits.keySet())).color(NamedTextColor.GREEN));
+            plugin.getUtils().message(sender,
+                    MessagesManager.getInstance().getMessage(
+                            "kits-list", "{kits}", String.join(", ", kits.keySet())
+                    )
+            );
             return 1;
         }));
 
