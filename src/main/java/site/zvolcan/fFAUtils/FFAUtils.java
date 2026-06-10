@@ -10,6 +10,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.managers.*;
+import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
+import fr.mrmicky.fastinv.FastInvManager;
 
 public class FFAUtils extends JavaPlugin {
 
@@ -38,6 +40,8 @@ public class FFAUtils extends JavaPlugin {
     private FFAPlaceholders ffaPlaceholders;
     @Getter
     private MessagesManager messagesManager;
+    @Getter
+    private ConfigMenuManager configMenuManager;
 
     @Override
     public void onEnable() {
@@ -49,6 +53,8 @@ public class FFAUtils extends JavaPlugin {
         spawnManager.registerSpawns();
         kitManager = new KitManager(this);
         kitManager.registerKits();
+        FastInvManager.register(this);
+        configMenuManager = new ConfigMenuManager(spawnManager, kitManager);
         combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks", 300L));
         combatLogManager.startCleanupTask();
         lobbyManager = new LobbyManager(this);
@@ -59,7 +65,7 @@ public class FFAUtils extends JavaPlugin {
         messagesManager.registerMessages();
         ffaPlaceholders = new FFAPlaceholders(this, statsManager);
         ffaPlaceholders.register();
-        commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders, playersManager);
+        commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders, playersManager, configMenuManager);
         getServer().getPluginManager().registerEvents(new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager, statsManager), this);
         getServer().getPluginManager().registerEvents(lobbyManager, this);
         

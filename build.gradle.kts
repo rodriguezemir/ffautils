@@ -27,12 +27,14 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
     implementation("fr.mrmicky:fastinv:3.1.2")
 
-    testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.12.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
     testImplementation("me.clip:placeholderapi:2.12.2")
+
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
 }
 
 java {
@@ -50,10 +52,10 @@ tasks {
 
     shadowJar {
         archiveClassifier.set("")
-        relocate("com.github.putindeer", "site.zvolcan.fFFAUtils.libs.utils")
-        relocate("com.google.gson", "site.zvolcan.fFFAUtils.libs.gson")
-        relocate("com.zaxxer.hikari", "site.zvolcan.fFFAUtils.libs.hikari")
-        relocate("fr.mrmicky.fastinv", "com.yourpackage.fastinv")
+        relocate("com.github.putindeer", "site.zvolcan.fFAUtils.libs.utils")
+        relocate("com.google.gson", "site.zvolcan.fFAUtils.libs.gson")
+        relocate("com.zaxxer.hikari", "site.zvolcan.fFAUtils.libs.hikari")
+        relocate("fr.mrmicky.fastinv", "site.zvolcan.fFAUtils.fastinv")
     }
 
     runServer {

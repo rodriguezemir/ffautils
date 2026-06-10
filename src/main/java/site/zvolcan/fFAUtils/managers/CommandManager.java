@@ -5,6 +5,7 @@ import site.zvolcan.fFAUtils.FFAPlaceholders;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.commands.*;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
+import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +18,16 @@ public final class CommandManager {
     private final LobbyManager lobbyManager;
     private final FFAPlaceholders ffaPlaceholders;
     private final PlayersManager playersManager;
+    private final ConfigMenuManager configMenuManager;
 
-    public CommandManager(FFAUtils plugin, KitManager kitManager, SpawnManager spawnManager, LobbyManager lobbyManager, FFAPlaceholders ffaPlaceholders, PlayersManager playersManager) {
+    public CommandManager(FFAUtils plugin, KitManager kitManager, SpawnManager spawnManager, LobbyManager lobbyManager, FFAPlaceholders ffaPlaceholders, PlayersManager playersManager, ConfigMenuManager configMenuManager) {
         this.plugin = plugin;
         this.kitManager = kitManager;
         this.spawnManager = spawnManager;
         this.lobbyManager = lobbyManager;
         this.ffaPlaceholders = ffaPlaceholders;
         this.playersManager = playersManager;
+        this.configMenuManager = configMenuManager;
         registerCommands();
     }
 
@@ -35,7 +38,7 @@ public final class CommandManager {
         list.add(new LoadMeCommand(plugin, kitManager, spawnManager, playersManager));
         list.add(new SpawnCommand(spawnManager, lobbyManager));
         list.add(new DeadCommand());
-        list.add(new MainCommand(plugin.getUtils(), ffaPlaceholders, plugin.getMessagesManager(), kitManager, spawnManager));
+        list.add(new MainCommand(plugin.getUtils(), ffaPlaceholders, plugin.getMessagesManager(), kitManager, spawnManager, configMenuManager));
         list.add(new SetSpawnCommand(spawnManager, kitManager, plugin.getUtils()));
 
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, (cmd) -> {
