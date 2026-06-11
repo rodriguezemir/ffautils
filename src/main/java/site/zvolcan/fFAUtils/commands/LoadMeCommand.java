@@ -53,12 +53,20 @@ public final class LoadMeCommand implements CommandExecutor {
                         String spawnName = StringArgumentType.getString(ctx, "spawn");
                         Kit kit = kitManager.getKit(kitName);
                         if (kit == null) {
-                            plugin.getUtils().message(player, Sounds.ERROR_SOUND, "<red>Kit '" + kitName + "' not found.");
+                            plugin.getUtils().message(player, Sounds.ERROR_SOUND,
+                                    MessagesManager.getInstance().getMessage(
+                                            "kit-not-found", "{name}", kitName
+                                    )
+                            );
                             return 1;
                         }
                         final Location spawn = spawnManager.getSpawn(spawnName);
                         if (spawn == null) {
-                            plugin.getUtils().message(player, Sounds.ERROR_SOUND, "<red>Spawn '" + spawnName + "' not found.");
+                            plugin.getUtils().message(player, Sounds.ERROR_SOUND,
+                                    MessagesManager.getInstance().getMessage(
+                                            "spawn-not-found", "{spawn}", spawnName
+                                    )
+                            );
                             return 1;
                         }
 

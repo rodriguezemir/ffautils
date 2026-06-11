@@ -1,4 +1,4 @@
-messages-prefix: "<b><gradient:#5472F4:#27A2C1>FFAUTILS</gradient></b> <dark_gray>▶️</dark_gray> "
+messages-prefix: "<b><gradient:#5472F4:#27A2C1>FFAUTILS</gradient></b> <dark_gray>⯮</dark_gray> "
 only-players-execute: "Only players can execute this command."
 save-spawn: "<green>Spawn {spawn} has been set."
 no-kits-available: "<red>No kits available."
@@ -10,3 +10,22 @@ kit-added-to-spawn: "<green>Kit {kit} added to spawn {spawn}."
 kit-removed-from-spawn: "<green>Kit {kit} removed from spawn {spawn}."
 spawn-not-found: "<red>Spawn {spawn} not found."
 spawn-deleted: "<green>Spawn {spawn} deleted."
+
+# Kit lifecycle messages
+kit-applied: "<green>Kit '{name}' has been applied."
+kit-already-exists: "<red>Kit '{name}' already exists."
+kit-created: "<green>Kit '{name}' has been created."
+kit-edited: "<green>Kit '{name}' has been edited."
+kit-deleted: "<green>Kit '{name}' has been deleted."
+kits-list: "<green>Kits: {kits}"
+
+# Combat log messages
+combat-enter: "<yellow>You are now in combat. Do not logout!"
+combat-exit: "<green>You are no longer in combat."
+
+# Misc
+reload-success: "<green>FFAUtils has been reloaded."
+
+# Killstreak broadcasts
+killstreak-lost: "{player} perdio una racha de {kills} kills."
+killstreak-gained: "{player} consiguio una racha de {kills} kills."

@@ -2,15 +2,19 @@ package site.zvolcan.fFAUtils.listeners;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.MockUtil;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
 import site.zvolcan.fFAUtils.managers.DeathEventManager;
+import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.managers.StatsManager;
@@ -20,6 +24,10 @@ import site.zvolcan.fFAUtils.objects.PlayerState;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -49,6 +57,45 @@ class PlayerDeathListenerTest {
     private UUID victimUuid;
     private UUID killerUuid;
     private AutoCloseable mockCloseable;
+
+    private static MockedStatic<MessagesManager> messagesMockScope;
+    private static MessagesManager messagesMock;
+
+    @BeforeAll
+    static void setupMessagesMock() {
+        messagesMockScope = mockStatic(MessagesManager.class, withSettings().lenient());
+        messagesMock = mock(MessagesManager.class, withSettings().lenient());
+        messagesMockScope.when(MessagesManager::getInstance).thenReturn(messagesMock);
+        when(messagesMock.getMessage(eq("killstreak-lost"),
+                eq("{player}"), anyString(),
+                eq("{kills}"), anyString()))
+                .thenAnswer(inv -> {
+                    String player = inv.getArgument(2);
+                    String kills = inv.getArgument(4);
+                    return "{player} perdio una racha de {kills} kills."
+                            .replace("{player}", player)
+                            .replace("{kills}", kills);
+                });
+        when(messagesMock.getMessage(eq("killstreak-gained"),
+                eq("{player}"), anyString(),
+                eq("{kills}"), anyString()))
+                .thenAnswer(inv -> {
+                    String player = inv.getArgument(2);
+                    String kills = inv.getArgument(4);
+                    return "{player} consiguio una racha de {kills} kills."
+                            .replace("{player}", player)
+                            .replace("{kills}", kills);
+                });
+    }
+
+    @AfterAll
+    static void teardownMessagesMock() {
+        if (messagesMockScope != null) {
+            messagesMockScope.close();
+            messagesMockScope = null;
+            messagesMock = null;
+        }
+    }
 
     @BeforeEach
     @SuppressWarnings("unchecked")

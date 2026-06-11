@@ -29,7 +29,8 @@ public class CombatLogManager {
         if (currentTime < time) {
             plugin.getUtils().message(
                     plugin.getServer().getPlayer(playerId),
-                    "<yellow>You are now in combat. Do not logout!"
+                    false,
+                    MessagesManager.getInstance().getMessage("combat-enter")
             );
         }
     }
@@ -53,7 +54,8 @@ public class CombatLogManager {
         if (player != null && player.isOnline() && combatEndTimes.containsKey(uuid)) {
             plugin.getUtils().message(
                     player,
-                    "<green>Your are no longer in combat."
+                    false,
+                    MessagesManager.getInstance().getMessage("combat-exit")
             );
         }
         combatEndTimes.remove(uuid);

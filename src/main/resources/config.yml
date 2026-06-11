@@ -1,0 +1,6 @@
+disable-lobby-items: false
+
+# In Seconds
+time-combat-log: 15
+
+stats-database-name: stats.db

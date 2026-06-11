@@ -32,6 +32,7 @@ public final class LobbyManager implements Listener {
      * Clears armor and restores it from config.
      */
     public void addLobbyItems(@NotNull Player player) {
+        if (plugin.getConfig().getBoolean("disable-lobby-items", false)) return;
         player.getInventory().clear();
         loadPlayerItems(player);
     }

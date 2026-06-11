@@ -79,7 +79,10 @@ public final class SetSpawnCommand implements CommandExecutor {
                         }
                         if (kitManager.getKit(kitName) == null) {
                             utils.message(player, Sounds.ERROR_SOUND,
-                                    "<red>Kit '" + kitName + "' not found.");
+                                    MessagesManager.getInstance().getMessage(
+                                            "kit-not-found", "{name}", kitName
+                                    )
+                            );
                             return 1;
                         }
 

@@ -34,7 +34,7 @@ public final class StatsManager {
             if (!dataFolder.exists()) {
                 dataFolder.mkdirs();
             }
-            File dbFile = new File(dataFolder, "stats.db");
+            File dbFile = new File(dataFolder, plugin.getConfig().getString("stats-database-name", "stats.db"));
 
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
@@ -49,14 +49,13 @@ public final class StatsManager {
 
     private void createTable() {
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.execute(
-                "CREATE TABLE IF NOT EXISTS player_stats (" +
-                "uuid VARCHAR(36) PRIMARY KEY, " +
-                "kills INT DEFAULT 0, " +
-                "deaths INT DEFAULT 0" +
-                ")"
-            );
+                    "CREATE TABLE IF NOT EXISTS player_stats (" +
+                            "uuid VARCHAR(36) PRIMARY KEY, " +
+                            "kills INT DEFAULT 0, " +
+                            "deaths INT DEFAULT 0" +
+                            ")");
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create player_stats table", e);
         }
@@ -65,9 +64,8 @@ public final class StatsManager {
     public FFAPlayer loadPlayer(UUID uuid) {
         FFAPlayer ffaPlayer = new FFAPlayer(uuid);
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                "SELECT kills, deaths FROM player_stats WHERE uuid = ?"
-        )) {
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT kills, deaths FROM player_stats WHERE uuid = ?")) {
             statement.setString(1, uuid.toString());
             ResultSet result = statement.executeQuery();
             if (result.next()) {
@@ -87,10 +85,9 @@ public final class StatsManager {
             return;
         }
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO player_stats (uuid, kills, deaths) VALUES (?, ?, ?) " +
-                "ON CONFLICT(uuid) DO UPDATE SET kills = ?, deaths = ?"
-        )) {
+                PreparedStatement statement = connection.prepareStatement(
+                        "INSERT INTO player_stats (uuid, kills, deaths) VALUES (?, ?, ?) " +
+                                "ON CONFLICT(uuid) DO UPDATE SET kills = ?, deaths = ?")) {
             statement.setString(1, uuid.toString());
             statement.setInt(2, ffaPlayer.getKills());
             statement.setInt(3, ffaPlayer.getDeaths());

@@ -8,6 +8,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
 import site.zvolcan.fFAUtils.managers.DeathEventManager;
+import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.managers.StatsManager;
@@ -49,10 +50,13 @@ public class PlayerDeathListener implements Listener {
         if (victimFfa.getState() == PlayerState.IN_FFA) {
             int lostStreak = victimFfa.getKillstreak();
             if (lostStreak > 0) {
-                String msg = "{player} perdio una racha de {kills} kills."
-                        .replace("{player}", player.getName())
-                        .replace("{kills}", String.valueOf(lostStreak));
-                FFAUtils.getInstance().getUtils().broadcast(false, msg);
+                FFAUtils.getInstance().getUtils().broadcast(false,
+                        MessagesManager.getInstance().getMessage(
+                                "killstreak-lost",
+                                "{player}", player.getName(),
+                                "{kills}", String.valueOf(lostStreak)
+                        )
+                );
             }
             victimFfa.setKillstreak(0);
         }
@@ -69,10 +73,13 @@ public class PlayerDeathListener implements Listener {
                 killerFfa.setKillstreak(newStreak);
 
                 if (isMilestone(newStreak)) {
-                    String msg = "{player} consiguio una racha de {kills} kills."
-                            .replace("{player}", killer.getName())
-                            .replace("{kills}", String.valueOf(newStreak));
-                    FFAUtils.getInstance().getUtils().broadcast(false, msg);
+                    FFAUtils.getInstance().getUtils().broadcast(false,
+                            MessagesManager.getInstance().getMessage(
+                                    "killstreak-gained",
+                                    "{player}", killer.getName(),
+                                    "{kills}", String.valueOf(newStreak)
+                            )
+                    );
                 }
             }
         }
