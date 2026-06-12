@@ -3,9 +3,12 @@ package site.zvolcan.fFAUtils.managers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import site.zvolcan.fFAUtils.objects.Kit;
 
 import java.io.File;
@@ -112,6 +115,39 @@ public class KitManager {
     /** Registers kits - loads all kits from file */
     public void registerKits() {
         loadAllKits();
+    }
+
+    /** Applies a kit to a player, auto-equipping armor pieces from contents */
+    public void applyKit(@NotNull Player player, @NotNull Kit kit) {
+        PlayerInventory inv = player.getInventory();
+        inv.setContents(kit.getContents());
+        equipArmorFromInventory(inv);
+    }
+
+    private void equipArmorFromInventory(@NotNull PlayerInventory inv) {
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = inv.getItem(i);
+            if (item == null || item.getType().isAir()) continue;
+
+            String typeName = item.getType().name();
+            if (typeName.endsWith("_HELMET") && isEmptyOrNull(inv.getHelmet())) {
+                inv.setHelmet(item);
+                inv.setItem(i, null);
+            } else if (typeName.endsWith("_CHESTPLATE") && isEmptyOrNull(inv.getChestplate())) {
+                inv.setChestplate(item);
+                inv.setItem(i, null);
+            } else if (typeName.endsWith("_LEGGINGS") && isEmptyOrNull(inv.getLeggings())) {
+                inv.setLeggings(item);
+                inv.setItem(i, null);
+            } else if (typeName.endsWith("_BOOTS") && isEmptyOrNull(inv.getBoots())) {
+                inv.setBoots(item);
+                inv.setItem(i, null);
+            }
+        }
+    }
+
+    private boolean isEmptyOrNull(@Nullable ItemStack item) {
+        return item == null || item.getType().isAir();
     }
 
     /** Persists each kit to its own file in the kits folder */
