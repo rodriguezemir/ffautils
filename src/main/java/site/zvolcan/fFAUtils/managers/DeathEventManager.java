@@ -33,6 +33,7 @@ public class DeathEventManager {
 
     /**
      * Returns an immutable copy of all death messages
+     * 
      * @return unmodifiable list of all messages
      */
     public List<String> getAllDeathEvents() {
@@ -69,6 +70,7 @@ public class DeathEventManager {
 
     /**
      * Broadcasts the death event message to all players
+     * 
      * @param killer the player killer
      * @param entity the player who died
      */
@@ -77,14 +79,12 @@ public class DeathEventManager {
             return;
         }
 
-        String message =
-                messages.get(ThreadLocalRandom.current().nextInt(messages.size()))
-                        .replace("{entity}", entity.getName());
+        String message = messages.get(ThreadLocalRandom.current().nextInt(messages.size()))
+                .replace("{entity}", entity.getName());
 
         message = message.replace("{killer}", killer.getName())
                 .replace("{health}",
-                        String.format("%.2f", killer.getHealth())
-                );
+                        String.format("%.2f", killer.getHealth()));
 
         plugin.getUtils().broadcast(false, message);
     }

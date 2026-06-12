@@ -22,6 +22,10 @@ kits-list: "<green>Kits: {kits}"
 # Combat log messages
 combat-enter: "<yellow>You are now in combat. Do not logout!"
 combat-exit: "<green>You are no longer in combat."
+combat-actionbar: "<yellow>You are now in combat. Do not logout!"
+
+# Respawn messages
+respawn-applied: "<green>You have been respawned with your kit!"
 
 # Misc
 reload-success: "<green>FFAUtils has been reloaded."
@@ -29,3 +33,6 @@ reload-success: "<green>FFAUtils has been reloaded."
 # Killstreak broadcasts
 killstreak-lost: "{player} perdio una racha de {kills} kills."
 killstreak-gained: "{player} consiguio una racha de {kills} kills."
+
+# Interact players
+interact-player-actionbar: "<gray>Ping {player}: <white> {ping}"
