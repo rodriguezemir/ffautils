@@ -43,7 +43,8 @@ public final class LobbyManager implements Listener {
     }
 
     public void addLobbyItems(@NotNull Player player) {
-        if (plugin.getConfig().getBoolean("disable-lobby-items", false)) return;
+        if (plugin.getConfig().getBoolean("disable-lobby-items", false))
+            return;
         player.getInventory().clear();
         loadPlayerItems(player);
         if (pendingRespawn.remove(player.getUniqueId())) {
@@ -55,9 +56,12 @@ public final class LobbyManager implements Listener {
         for (int i : items.keySet()) {
             final ItemStack item = items.get(i);
 
-            if (item == null) continue;
+            if (item == null)
+                continue;
             player.getInventory().setItem(i, item);
         }
+
+        addRespawnItem(player);
     }
 
     public void markForRespawn(@NotNull UUID playerId) {
@@ -69,9 +73,11 @@ public final class LobbyManager implements Listener {
     }
 
     private void addRespawnItem(@NotNull Player player) {
-        if (respawnItemMaterial == null) return;
+        if (respawnItemMaterial == null)
+            return;
         FFAPlayer ffaPlayer = plugin.getPlayersManager().getFFAPlayer(player);
-        if (ffaPlayer.getLastKit() == null || ffaPlayer.getLastSpawn() == null) return;
+        if (ffaPlayer.getLastKit() == null || ffaPlayer.getLastSpawn() == null)
+            return;
 
         ItemStack item = plugin.getUtils().ib(respawnItemMaterial)
                 .name(respawnItemName).build();
@@ -86,15 +92,17 @@ public final class LobbyManager implements Listener {
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(itemsFile);
-        if (!config.contains("items")) return;
+        if (!config.contains("items"))
+            return;
 
         for (String key : Objects.requireNonNull(config.getConfigurationSection("items")).getKeys(false)) {
             try {
                 Material mat = Material.getMaterial(config.getString("items." + key + ".material", "COMPASS"));
-                if (mat == null) continue;
+                if (mat == null)
+                    continue;
                 int slot = Integer.parseInt(key);
-                final ItemStack item = plugin.getUtils().ib(mat).
-                        name(config.getString("items." + key + ".display-name")).build();
+                final ItemStack item = plugin.getUtils().ib(mat)
+                        .name(config.getString("items." + key + ".display-name")).build();
 
                 items.put(slot, item);
                 if (config.isString("items." + key + ".command")) {
@@ -116,14 +124,17 @@ public final class LobbyManager implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         final ItemStack item = event.getItem();
-        if (item == null) return;
+        if (item == null)
+            return;
 
         if (isRespawnItem(item)) {
             event.setCancelled(true);
             Player player = event.getPlayer();
             FFAPlayer ffaPlayer = plugin.getPlayersManager().getFFAPlayer(player);
-            if (ffaPlayer.getLastKit() == null || ffaPlayer.getLastSpawn() == null) return;
-            if (ffaPlayer.getState() != PlayerState.LOBBY) return;
+            if (ffaPlayer.getLastKit() == null || ffaPlayer.getLastSpawn() == null)
+                return;
+            if (ffaPlayer.getState() != PlayerState.LOBBY)
+                return;
 
             Kit kit = ffaPlayer.getLastKit();
             plugin.getKitManager().applyKit(player, kit);
