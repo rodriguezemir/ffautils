@@ -7,6 +7,7 @@ import java.io.File;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import site.zvolcan.fFAUtils.listeners.PlayerCommandBlockerListener;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.listeners.PlayerInteractiveListener;
@@ -43,6 +44,8 @@ public class FFAUtils extends JavaPlugin {
         private MessagesManager messagesManager;
         @Getter
         private ConfigMenuManager configMenuManager;
+        @Getter
+        private BlockedCommandsManager blockedCommandsManager;
 
         @Override
         public void onEnable() {
@@ -73,6 +76,10 @@ public class FFAUtils extends JavaPlugin {
                                 getConfig().getLong("duration-combat-log", 15) * 20L));
                 combatLogManager.startCleanupTask();
                 getLogger().info("\u00A7bLoading CombatLog");
+                blockedCommandsManager = new BlockedCommandsManager(this);
+                saveResource("blocked-commands.yml", false);
+                blockedCommandsManager.loadBlockedCommands();
+                getLogger().info("\u00A7bLoading BlockedCommands");
                 lobbyManager = new LobbyManager(this);
                 getLogger().info("\u00A7bLoading LobbyManager");
                 playersManager = new PlayersManager();
@@ -101,9 +108,11 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerDeathListener(this, deathEventManager, spawnManager, combatLogManager,
                                                 statsManager,
-                                                playersManager, lobbyManager),
+                                                playersManager, lobbyManager, kitManager),
                                 this);
                 getServer().getPluginManager().registerEvents(new PlayerInteractiveListener(playersManager), this);
+                getServer().getPluginManager().registerEvents(
+                                new PlayerCommandBlockerListener(this), this);
         }
 
         @Override

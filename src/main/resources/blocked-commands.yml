@@ -1,0 +1,9 @@
+# BlockedCommandsManager configuration
+# Players in combat cannot execute these command root labels
+# Matching is case-insensitive (normalized to lowercase)
+
+commands:
+  - kit
+  - spawn
+  - ffautils
+  - lobby
