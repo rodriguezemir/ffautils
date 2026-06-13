@@ -7,3 +7,7 @@ dependencies:
     PlaceholderAPI:
       load: BEFORE
       required: false
+permissions:
+  ffautils.bypass-combat-block:
+    description: Allows executing blocked commands while in combat
+    default: op

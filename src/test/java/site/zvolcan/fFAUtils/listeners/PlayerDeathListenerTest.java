@@ -14,6 +14,7 @@ import org.mockito.internal.util.MockUtil;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
 import site.zvolcan.fFAUtils.managers.DeathEventManager;
+import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.LobbyManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
@@ -48,6 +49,8 @@ class PlayerDeathListenerTest {
     private PlayersManager playersManager;
     @Mock
     private LobbyManager lobbyManager;
+    @Mock
+    private KitManager kitManager;
     @Mock
     private Player victim;
     @Mock
@@ -121,7 +124,7 @@ class PlayerDeathListenerTest {
             throw new RuntimeException("Cannot load PluginUtils", e);
         }
 
-        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager, lobbyManager);
+        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager, lobbyManager, kitManager);
     }
 
     @AfterEach
