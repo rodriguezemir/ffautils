@@ -16,6 +16,7 @@ import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
+import site.zvolcan.fFAUtils.objects.PlayerState;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
 import java.util.List;
@@ -51,11 +52,11 @@ public final class LoadMeCommand implements CommandExecutor {
                                         return 1;
                                     }
                                     FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
-                                    if (ffaPlayer.getState() != PlayerState.LOBBY) {
-                                        plugin.getUtils().message(player, Sounds.ERROR_SOUND,
-                                                MessagesManager.getInstance().getMessage(
-                                                        "player-already-in-ffa"));
-                                    }
+                                    // if (ffaPlayer.getState() != PlayerState.LOBBY) {
+                                    // plugin.getUtils().message(player, Sounds.ERROR_SOUND,
+                                    // MessagesManager.getInstance().getMessage(
+                                    // "player-already-in-ffa"));
+                                    // }
 
                                     String kitName = StringArgumentType.getString(ctx, "kit");
                                     String spawnName = StringArgumentType.getString(ctx, "spawn");
