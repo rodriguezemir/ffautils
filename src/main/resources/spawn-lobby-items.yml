@@ -12,6 +12,6 @@ items:
 
 # Respawn item given to players who die with a kit and spawn loaded
 respawn-item:
-  material: "PINK_DYE"
+  material: "ARROW"
   display-name: "<yellow>Respawn"
   slot: 4

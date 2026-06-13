@@ -133,20 +133,18 @@ public final class LobbyManager implements Listener {
             FFAPlayer ffaPlayer = plugin.getPlayersManager().getFFAPlayer(player);
             if (ffaPlayer.getLastKit() == null || ffaPlayer.getLastSpawn() == null)
                 return;
-            if (ffaPlayer.getState() != PlayerState.LOBBY)
-                return;
 
             Kit kit = ffaPlayer.getLastKit();
             plugin.getKitManager().applyKit(player, kit);
             player.teleport(ffaPlayer.getLastSpawn());
             ffaPlayer.setState(PlayerState.IN_FFA);
-            plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
-                    MessagesManager.getInstance().getMessage("respawn-applied"));
+            // plugin.getUtils().message(player, Sounds.SUCCESS_SOUND,
+            // MessagesManager.getInstance().getMessage("respawn-applied"));
             return;
         }
 
         if (commands.containsKey(item.getType())) {
-            event.getPlayer().performCommand("/" + commands.get(item.getType()));
+            event.getPlayer().performCommand(commands.get(item.getType()));
         }
     }
 

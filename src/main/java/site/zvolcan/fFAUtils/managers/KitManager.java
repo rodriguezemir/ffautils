@@ -90,22 +90,31 @@ public class KitManager {
         }
 
         Gson gson = new GsonBuilder().create();
-        Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
+        Type mapType = new TypeToken<Map<String, Map<String, Object>>>(){}.getType();
 
         for (File kitFile : kitFiles) {
             String kitName = kitFile.getName().replace(".json", "");
             try (FileReader reader = new FileReader(kitFile)) {
-                List<Map<String, Object>> itemsData = gson.fromJson(reader, listType);
+                Map<String, Map<String, Object>> itemsData = gson.fromJson(reader, mapType);
                 if (itemsData == null) {
                     plugin.getLogger().log(Level.WARNING, "Kit file is empty or malformed: " + kitFile.getName());
                     continue;
                 }
-                List<ItemStack> itemList = new ArrayList<>();
-                for (Map<String, Object> data : itemsData) {
-                    if (data == null) continue;
-                    itemList.add(ItemStack.deserialize(normalizeTypes(data)));
+                int maxSlot = 0;
+                for (String key : itemsData.keySet()) {
+                    try {
+                        maxSlot = Math.max(maxSlot, Integer.parseInt(key));
+                    } catch (NumberFormatException ignored) {}
                 }
-                kits.put(kitName, new Kit(kitName, itemList.toArray(new ItemStack[0])));
+                ItemStack[] contents = new ItemStack[maxSlot + 1];
+                for (Map.Entry<String, Map<String, Object>> entry : itemsData.entrySet()) {
+                    if (entry.getValue() == null) continue;
+                    try {
+                        int slot = Integer.parseInt(entry.getKey());
+                        contents[slot] = ItemStack.deserialize(normalizeTypes(entry.getValue()));
+                    } catch (NumberFormatException ignored) {}
+                }
+                kits.put(kitName, new Kit(kitName, contents));
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING, "Failed to load kit file: " + kitFile.getName(), e);
             }
@@ -166,9 +175,12 @@ public class KitManager {
         for (Map.Entry<String, Kit> entry : kits.entrySet()) {
             File kitFile = new File(kitsFolder, entry.getKey() + ".json");
 
-            List<Map<String, Object>> itemsData = new ArrayList<>();
-            for (ItemStack item : entry.getValue().getContents()) {
-                itemsData.add(item == null ? null : item.serialize());
+            Map<String, Map<String, Object>> itemsData = new LinkedHashMap<>();
+            ItemStack[] contents = entry.getValue().getContents();
+            for (int i = 0; i < contents.length; i++) {
+                if (contents[i] != null) {
+                    itemsData.put(String.valueOf(i), contents[i].serialize());
+                }
             }
 
             try (FileWriter writer = new FileWriter(kitFile)) {
