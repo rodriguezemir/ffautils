@@ -27,6 +27,7 @@ public final class SpawnCommand implements CommandExecutor {
 
                     if (source.getSender() instanceof Player player) {
                         player.teleport(spawnManager.getLobbySpawn());
+                        player.setHealth(20);
                         lobbyManager.addLobbyItems(player);
                     }
 

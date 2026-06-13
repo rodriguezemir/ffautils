@@ -8,12 +8,14 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
 import site.zvolcan.fFAUtils.managers.DeathEventManager;
+import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.LobbyManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.managers.StatsManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
+import site.zvolcan.fFAUtils.objects.Kit;
 
 public class PlayerDeathListener implements Listener {
 
@@ -70,6 +72,7 @@ public class PlayerDeathListener implements Listener {
 
         if (player.getKiller() != null) {
             final Player killer = player.getKiller();
+            killer.setHealth(20);
             combatLogManager.removeFromCombat(killer.getUniqueId());
             statsManager.addKill(killer.getUniqueId());
 
@@ -84,6 +87,11 @@ public class PlayerDeathListener implements Listener {
                                     "killstreak-gained",
                                     "{player}", killer.getName(),
                                     "{kills}", String.valueOf(newStreak)));
+                }
+
+                Kit kit = killerFfa.getLastKit();
+                if (kit != null) {
+                    player.getInventory().setContents(kit.getContents());
                 }
             }
         }
