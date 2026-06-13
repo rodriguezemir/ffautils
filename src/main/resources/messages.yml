@@ -24,6 +24,7 @@ kits-list: "<green>Kits: {kits}"
 combat-enter: "<yellow>You are now in combat. Do not logout!"
 combat-exit: "<green>You are no longer in combat."
 combat-actionbar: "<yellow>You are now in combat. Do not logout!"
+combat-command-blocked: "<red>You cannot use this command while in combat."
 
 # Respawn messages
 respawn-applied: "<green>You have been respawned with your kit!"
