@@ -1,5 +1,6 @@
 package site.zvolcan.fFAUtils.listeners;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,6 +17,7 @@ import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.managers.StatsManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
+import site.zvolcan.fFAUtils.objects.PlayerState;
 
 public class PlayerDeathListener implements Listener {
 
@@ -60,7 +62,7 @@ public class PlayerDeathListener implements Listener {
 
         if (victimFfa.getState() == site.zvolcan.fFAUtils.objects.PlayerState.IN_FFA) {
             int lostStreak = victimFfa.getKillstreak();
-            if (lostStreak > 0) {
+            if (isMilestone(lostStreak)) {
                 FFAUtils.getInstance().getUtils().broadcast(false,
                         MessagesManager.getInstance().getMessage(
                                 "killstreak-lost",
@@ -68,11 +70,18 @@ public class PlayerDeathListener implements Listener {
                                 "{kills}", String.valueOf(lostStreak)));
             }
             victimFfa.setKillstreak(0);
+            victimFfa.setState(PlayerState.LOBBY);
         }
 
         if (player.getKiller() != null) {
             final Player killer = player.getKiller();
-            killer.setHealth(20);
+            double healthBefore = killer.getHealth();
+            double maxHealth = 20;
+            killer.setHealth(maxHealth);
+            double healed = maxHealth - healthBefore;
+            killer.sendActionBar(MiniMessage.miniMessage().deserialize(
+                    MessagesManager.getInstance().getMessage("health-regenerated", "{health}",
+                            String.format("%.1f", healed))));
             combatLogManager.removeFromCombat(killer.getUniqueId());
             statsManager.addKill(killer.getUniqueId());
 
@@ -91,7 +100,7 @@ public class PlayerDeathListener implements Listener {
 
                 Kit kit = killerFfa.getLastKit();
                 if (kit != null) {
-                    player.getInventory().setContents(kit.getContents());
+                    killer.getInventory().setContents(kit.getContents().clone());
                 }
             }
         }

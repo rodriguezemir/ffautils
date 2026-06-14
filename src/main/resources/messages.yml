@@ -29,6 +29,8 @@ combat-command-blocked: "<red>You cannot use this command while in combat."
 # Respawn messages
 respawn-applied: "<green>You have been respawned with your kit!"
 
+health-regenerated: "<green>{health}hp health regenerated"
+
 # Misc
 reload-success: "<green>FFAUtils has been reloaded."
 
