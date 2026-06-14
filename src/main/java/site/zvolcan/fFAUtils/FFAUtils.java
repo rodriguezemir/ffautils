@@ -51,11 +51,10 @@ public class FFAUtils extends JavaPlugin {
         public void onEnable() {
                 instance = this;
 
-                getLogger().info(
-                                "████████████████████████████████████████████████\n" +
-                                                "█▓▄▄▓█▓▄▄▓██▀▓██▓▓██▓▄█▓▄▓▄▓█▓▄█▓▄▓███▓▄▄▄▄█\n" +
-                                                "██▓▄████▓▄████▓▀▓███▓██▓████▓████▓███▓██▀█▄▄▄▄▓█\n" +
-                                                "▀▄▄▄▀▀▀▄▄▄▀▀▀▄▄▀▄▄▀▀▄▄▄▄▀▀▀▄▄▄▀▀▄▄▄▀▄▄▄▄▄▀▄▄▄▄▄▀");
+                getLogger().info("████████████████████████████████████████████████");
+                getLogger().info("█▓▄▄▓█▓▄▄▓██▀▓██▓▓██▓▄█▓▄▓▄▓█▓▄█▓▄▓███▓▄▄▄▄█");
+                getLogger().info("██▓▄████▓▄████▓▀▓███▓██▓████▓████▓███▓██▀█▄▄▄▄▓█");
+                getLogger().info("▀▄▄▄▀▀▀▄▄▄▀▀▀▄▄▀▄▄▀▀▄▄▄▄▀▀▀▄▄▄▀▀▄▄▄▀▄▄▄▄▄▀▄▄▄▄▄▀");
 
                 saveDefaultConfig();
                 utils = new PluginUtils(this,
@@ -65,31 +64,31 @@ public class FFAUtils extends JavaPlugin {
                                                                 "<b><gradient:#5472F4:#27A2C1>FFAUTILS</gradient></b> <dark_gray>⯮</dark_gray> "));
                 spawnManager = new SpawnManager(this);
                 spawnManager.registerSpawns();
-                getLogger().info("\u00A7bLoading Spawns");
+                getLogger().info("Loading Spawns");
                 kitManager = new KitManager(this);
                 kitManager.registerKits();
-                getLogger().info("\u00A7bLoading Kits");
+                getLogger().info("Loading Kits");
                 FastInvManager.register(this);
                 configMenuManager = new ConfigMenuManager(spawnManager, kitManager);
-                getLogger().info("\u00A7bLoading ConfigMenu");
+                getLogger().info("Loading ConfigMenu");
                 combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks",
                                 getConfig().getLong("duration-combat-log", 15) * 20L));
                 combatLogManager.startCleanupTask();
-                getLogger().info("\u00A7bLoading CombatLog");
+                getLogger().info("Loading CombatLog");
                 blockedCommandsManager = new BlockedCommandsManager(this);
                 saveResource("blocked-commands.yml", false);
                 blockedCommandsManager.loadBlockedCommands();
-                getLogger().info("\u00A7bLoading BlockedCommands");
+                getLogger().info("Loading BlockedCommands");
                 lobbyManager = new LobbyManager(this);
-                getLogger().info("\u00A7bLoading LobbyManager");
+                getLogger().info("Loading LobbyManager");
                 playersManager = new PlayersManager();
-                getLogger().info("\u00A7bLoading PlayersManager");
+                getLogger().info("Loading PlayersManager");
                 statsManager = new StatsManager(this);
                 statsManager.init();
-                getLogger().info("\u00A7bLoading StatsManager");
+                getLogger().info("Loading StatsManager");
                 messagesManager = new MessagesManager(this);
                 messagesManager.registerMessages();
-                getLogger().info("\u00A7bLoading Messages");
+                getLogger().info("Loading Messages");
                 if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                         ffaPlaceholders = new FFAPlaceholders(this, statsManager);
                         ffaPlaceholders.register();
@@ -99,7 +98,7 @@ public class FFAUtils extends JavaPlugin {
                 deathEventManager.registerDeathMessages();
                 commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders,
                                 playersManager, configMenuManager, deathEventManager);
-                getLogger().info("\u00A7bLoading Commands");
+                getLogger().info("Loading Commands");
                 getServer().getPluginManager().registerEvents(
                                 new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager,
                                                 statsManager),
