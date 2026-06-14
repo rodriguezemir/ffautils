@@ -92,6 +92,9 @@ class PlayerDeathListenerTest {
                             .replace("{player}", player)
                             .replace("{kills}", kills);
                 });
+        when(messagesMock.getMessage(eq("health-regenerated"),
+                eq("{health}"), anyString()))
+                .thenAnswer(inv -> "<green>" + inv.getArgument(2) + "hp health regenerated");
     }
 
     @AfterAll
@@ -124,7 +127,7 @@ class PlayerDeathListenerTest {
             throw new RuntimeException("Cannot load PluginUtils", e);
         }
 
-        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager, lobbyManager, kitManager);
+        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager, lobbyManager);
     }
 
     @AfterEach
@@ -369,6 +372,7 @@ class PlayerDeathListenerTest {
         killerFfa.setState(state);
         killerFfa.setKillstreak(killstreak);
         when(playersManager.getFFAPlayer(killer)).thenReturn(killerFfa);
+        when(killer.getHealth()).thenReturn(20.0);
         return killerFfa;
     }
 }

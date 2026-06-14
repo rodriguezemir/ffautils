@@ -45,6 +45,7 @@ public final class CommandManager {
         list.add(new MainCommand(plugin.getUtils(), ffaPlaceholders, plugin.getMessagesManager(), kitManager,
                 spawnManager, configMenuManager, deathEventManager));
         list.add(new SetSpawnCommand(spawnManager, kitManager, plugin.getUtils()));
+        list.add(new KitEditorCommand(plugin, configMenuManager, playersManager));
 
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, (cmd) -> {
             for (CommandExecutor executor : list) {
