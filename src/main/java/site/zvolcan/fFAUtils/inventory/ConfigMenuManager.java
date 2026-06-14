@@ -44,6 +44,14 @@ public class ConfigMenuManager {
         new KitDetailInventory(this, kitName, previousPage).open(player);
     }
 
+    public void openKitEditor(Player player, int page) {
+        new KitEditorInventory(this, page).open(player);
+    }
+
+    public void openKitEditContents(Player player, String kitName) {
+        new KitEditContentsInventory(this, kitName).open(player);
+    }
+
     public SpawnManager getSpawnManager() {
         return spawnManager;
     }
