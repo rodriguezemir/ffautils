@@ -40,7 +40,7 @@ public final class CommandManager {
         final List<CommandExecutor> list = new ArrayList<>();
         list.add(new KitCommand(plugin, kitManager));
         list.add(new LoadMeCommand(plugin, kitManager, spawnManager, playersManager));
-        list.add(new SpawnCommand(spawnManager, lobbyManager));
+        list.add(new SpawnCommand(spawnManager, lobbyManager, playersManager));
         list.add(new DeadCommand());
         list.add(new MainCommand(plugin.getUtils(), ffaPlaceholders, plugin.getMessagesManager(), kitManager,
                 spawnManager, configMenuManager, deathEventManager));

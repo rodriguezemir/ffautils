@@ -65,7 +65,8 @@ public class KitEditContentsInventory extends FastInv {
 
         ItemStack glassPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.displayName(MiniMessage.miniMessage().deserialize("<dark_gray> </dark_gray>").decoration(TextDecoration.ITALIC, false));
+        glassMeta.displayName(MiniMessage.miniMessage().deserialize("<dark_gray> </dark_gray>")
+                .decoration(TextDecoration.ITALIC, false));
         glassPane.setItemMeta(glassMeta);
 
         setItem(ARMOR_ROW_START, glassPane);
@@ -80,7 +81,8 @@ public class KitEditContentsInventory extends FastInv {
 
         ItemStack saveItem = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta saveMeta = saveItem.getItemMeta();
-        saveMeta.displayName(MiniMessage.miniMessage().deserialize("<green><bold>Save</bold></green>").decoration(TextDecoration.ITALIC, false));
+        saveMeta.displayName(MiniMessage.miniMessage().deserialize("<green><bold>Save</bold></green>")
+                .decoration(TextDecoration.ITALIC, false));
         saveItem.setItemMeta(saveMeta);
         setItem(SAVE_SLOT, saveItem, e -> {
             e.setCancelled(true);
@@ -89,7 +91,8 @@ public class KitEditContentsInventory extends FastInv {
 
         ItemStack cancelItem = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta cancelMeta = cancelItem.getItemMeta();
-        cancelMeta.displayName(MiniMessage.miniMessage().deserialize("<red><bold>Cancel</bold></red>").decoration(TextDecoration.ITALIC, false));
+        cancelMeta.displayName(MiniMessage.miniMessage().deserialize("<red><bold>Cancel</bold></red>")
+                .decoration(TextDecoration.ITALIC, false));
         cancelItem.setItemMeta(cancelMeta);
         setItem(CANCEL_SLOT, cancelItem, e -> {
             e.setCancelled(true);
@@ -178,7 +181,8 @@ public class KitEditContentsInventory extends FastInv {
     }
 
     private boolean isPlaceholder(ItemStack item) {
-        if (item == null) return false;
+        if (item == null)
+            return false;
         return item.getType() == Material.BLACK_STAINED_GLASS_PANE
                 || item.getType() == Material.LIME_STAINED_GLASS_PANE
                 || item.getType() == Material.RED_STAINED_GLASS_PANE;
@@ -186,12 +190,18 @@ public class KitEditContentsInventory extends FastInv {
 
     private static Material getDefaultMaterial(int kitSlot) {
         switch (kitSlot) {
-            case 36: return Material.IRON_HELMET;
-            case 37: return Material.IRON_CHESTPLATE;
-            case 38: return Material.IRON_LEGGINGS;
-            case 39: return Material.IRON_BOOTS;
-            case 40: return Material.SHIELD;
-            default: return Material.AIR;
+            case 36:
+                return Material.IRON_HELMET;
+            case 37:
+                return Material.IRON_CHESTPLATE;
+            case 38:
+                return Material.IRON_LEGGINGS;
+            case 39:
+                return Material.IRON_BOOTS;
+            case 40:
+                return Material.SHIELD;
+            default:
+                return Material.AIR;
         }
     }
 }

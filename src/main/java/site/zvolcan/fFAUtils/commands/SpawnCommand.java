@@ -7,16 +7,21 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
 import site.zvolcan.fFAUtils.managers.LobbyManager;
+import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
+import site.zvolcan.fFAUtils.objects.FFAPlayer;
+import site.zvolcan.fFAUtils.objects.PlayerState;
 
 public final class SpawnCommand implements CommandExecutor {
 
     private final SpawnManager spawnManager;
     private final LobbyManager lobbyManager;
+    private final PlayersManager playersManager;
 
-    public SpawnCommand(SpawnManager spawnManager, LobbyManager lobbyManager) {
+    public SpawnCommand(SpawnManager spawnManager, LobbyManager lobbyManager, PlayersManager playersManager) {
         this.spawnManager = spawnManager;
         this.lobbyManager = lobbyManager;
+        this.playersManager = playersManager;
     }
 
     @Override
@@ -28,6 +33,11 @@ public final class SpawnCommand implements CommandExecutor {
                     if (source.getSender() instanceof Player player) {
                         player.teleport(spawnManager.getLobbySpawn());
                         player.setHealth(20);
+                        player.getActivePotionEffects().forEach(e -> {
+                            player.removePotionEffect(e.getType());
+                        });
+                        FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
+                        ffaPlayer.setState(PlayerState.LOBBY);
                         lobbyManager.addLobbyItems(player);
                     }
 
