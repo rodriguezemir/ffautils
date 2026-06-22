@@ -33,6 +33,7 @@ public final class SpawnCommand implements CommandExecutor {
                     if (source.getSender() instanceof Player player) {
                         player.teleport(spawnManager.getLobbySpawn());
                         player.setHealth(20);
+                        player.setFoodLevel(20);
                         player.getActivePotionEffects().forEach(e -> {
                             player.removePotionEffect(e.getType());
                         });
