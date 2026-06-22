@@ -107,7 +107,7 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerDeathListener(this, deathEventManager, spawnManager, combatLogManager,
                                                 statsManager,
-                                                playersManager, lobbyManager),
+                                                playersManager, lobbyManager, kitManager),
                                 this);
                 getServer().getPluginManager().registerEvents(new PlayerInteractiveListener(playersManager), this);
                 getServer().getPluginManager().registerEvents(

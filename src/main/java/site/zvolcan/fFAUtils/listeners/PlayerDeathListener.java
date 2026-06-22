@@ -28,10 +28,11 @@ public class PlayerDeathListener implements Listener {
     private final StatsManager statsManager;
     private final PlayersManager playersManager;
     private final LobbyManager lobbyManager;
+    private final KitManager kitManager;
 
     public PlayerDeathListener(FFAUtils plugin, DeathEventManager deathEventManager, SpawnManager spawnManager,
-            CombatLogManager combatLogManager, StatsManager statsManager, PlayersManager playersManager,
-            LobbyManager lobbyManager) {
+                               CombatLogManager combatLogManager, StatsManager statsManager, PlayersManager playersManager,
+                               LobbyManager lobbyManager, KitManager kitManager) {
         this.plugin = plugin;
         this.deathEventManager = deathEventManager;
         this.spawnManager = spawnManager;
@@ -39,6 +40,7 @@ public class PlayerDeathListener implements Listener {
         this.statsManager = statsManager;
         this.playersManager = playersManager;
         this.lobbyManager = lobbyManager;
+        this.kitManager = kitManager;
     }
 
     static boolean isMilestone(int killstreak) {
@@ -100,7 +102,7 @@ public class PlayerDeathListener implements Listener {
 
                 Kit kit = killerFfa.getLastKit();
                 if (kit != null) {
-                    killer.getInventory().setContents(kit.getContents().clone());
+                    kitManager.applyKit(killer, kit);
                 }
             }
         }
