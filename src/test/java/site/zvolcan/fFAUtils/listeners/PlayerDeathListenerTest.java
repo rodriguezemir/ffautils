@@ -119,15 +119,15 @@ class PlayerDeathListenerTest {
         // PluginUtils is not mockable via @Mock in this environment,
         // so we create a mock manually with lenient settings
         try {
-            Class<me.putindeer.api.util.PluginUtils> puClass =
-                    (Class<me.putindeer.api.util.PluginUtils>)
-                            Class.forName("me.putindeer.api.util.PluginUtils");
+            Class<me.putindeer.api.util.PluginUtils> puClass = (Class<me.putindeer.api.util.PluginUtils>) Class
+                    .forName("me.putindeer.api.util.PluginUtils");
             utils = mock(puClass, withSettings().lenient().withoutAnnotations());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Cannot load PluginUtils", e);
         }
 
-        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager, lobbyManager);
+        listener = new PlayerDeathListener(null, deathEventManager, spawnManager, combatLogManager, statsManager,
+                playersManager, lobbyManager, kitManager);
     }
 
     @AfterEach

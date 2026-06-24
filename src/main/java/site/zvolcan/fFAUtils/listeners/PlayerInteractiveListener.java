@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -101,6 +102,18 @@ public class PlayerInteractiveListener implements Listener {
                 placedBlock.setType(Material.AIR);
             }
         }, 20L * 8); // 8 segundos
+    }
+
+    // Esto hace que cuando se cree un bloque de obsidiana
+    // Por el contacto del agua con la lava, se elimine despues de un momento.
+    @EventHandler
+    public void onBlockCreate(BlockFromToEvent event) {
+        Material mat = event.getBlock().getType();
+        if (mat == Material.COBBLESTONE || mat == Material.OBSIDIAN) {
+            Bukkit.getScheduler().runTaskLater(FFAUtils.getInstance(), () -> {
+                event.getBlock().setType(Material.AIR);
+            }, 20L * 8); // 8 segundos
+        }
     }
 
 }
