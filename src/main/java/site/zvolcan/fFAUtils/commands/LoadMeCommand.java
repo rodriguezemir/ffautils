@@ -83,6 +83,10 @@ public final class LoadMeCommand implements CommandExecutor {
                                         return 1;
                                     }
 
+                                    player.getActivePotionEffects().forEach(e -> {
+                                        player.removePotionEffect(e.getType());
+                                    });
+
                                     kitManager.applyKit(player, kit);
                                     player.teleport(spawn);
 
