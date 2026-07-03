@@ -12,7 +12,6 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
-import site.zvolcan.fFAUtils.objects.Sounds;
 import site.zvolcan.fFAUtils.objects.Kit;
 import site.zvolcan.fFAUtils.objects.PlayerState;
 

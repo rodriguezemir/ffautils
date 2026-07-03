@@ -7,6 +7,8 @@ import java.io.File;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import site.zvolcan.fFAUtils.listeners.InventorySoundListener;
 import site.zvolcan.fFAUtils.listeners.PlayerCommandBlockerListener;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
@@ -118,6 +120,7 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerTotemDeathListener(this, spawnManager, playersManager, lobbyManager),
                                 this);
+                getServer().getPluginManager().registerEvents(new InventorySoundListener(), this);
                 vanishManager = new VanishManager(this, playersManager);
                 getServer().getPluginManager().registerEvents(vanishManager, this);
                 vanishManager.startRefreshTask();

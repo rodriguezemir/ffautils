@@ -24,7 +24,7 @@ dependencies {
 
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.12.2")
-    compileOnly("com.github.retrooper:packetevents-INSERT_MODULE_HERE:2.13.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
 
     implementation("com.github.putindeer:mcdev-utils:1.0.28")
     implementation("com.google.code.gson:gson:2.14.0")
