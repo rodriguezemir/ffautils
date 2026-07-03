@@ -16,7 +16,6 @@ import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
-import site.zvolcan.fFAUtils.objects.PlayerState;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
 import java.util.List;

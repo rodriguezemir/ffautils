@@ -11,6 +11,7 @@ import site.zvolcan.fFAUtils.listeners.PlayerCommandBlockerListener;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.listeners.PlayerInteractiveListener;
+import site.zvolcan.fFAUtils.listeners.PlayerTotemDeathListener;
 import site.zvolcan.fFAUtils.managers.*;
 import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
 import fr.mrmicky.fastinv.FastInvManager;
@@ -46,6 +47,8 @@ public class FFAUtils extends JavaPlugin {
         private ConfigMenuManager configMenuManager;
         @Getter
         private BlockedCommandsManager blockedCommandsManager;
+        @Getter
+        private VanishManager vanishManager;
 
         @Override
         public void onEnable() {
@@ -112,11 +115,21 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(new PlayerInteractiveListener(playersManager), this);
                 getServer().getPluginManager().registerEvents(
                                 new PlayerCommandBlockerListener(this), this);
+                getServer().getPluginManager().registerEvents(
+                                new PlayerTotemDeathListener(this, spawnManager, playersManager, lobbyManager),
+                                this);
+                vanishManager = new VanishManager(this, playersManager);
+                getServer().getPluginManager().registerEvents(vanishManager, this);
+                vanishManager.startRefreshTask();
+                getLogger().info("Loading VanishManager");
         }
 
         @Override
         public void onDisable() {
                 combatLogManager.stopCleanupTask();
+                if (vanishManager != null) {
+                        vanishManager.stopRefreshTask();
+                }
                 statsManager.close();
                 messagesManager.saveMessages();
         }
