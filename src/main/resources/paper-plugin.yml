@@ -1,10 +1,13 @@
 name: FFAUtils
-version: '${version}'
+version: "${version}"
 main: site.zvolcan.fFAUtils.FFAUtils
-api-version: '1.21'
+api-version: "1.21"
 dependencies:
   server:
     PlaceholderAPI:
+      load: BEFORE
+      required: false
+    packetevents:
       load: BEFORE
       required: false
 permissions:
