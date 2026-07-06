@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
 import site.zvolcan.fFAUtils.managers.LobbyManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
+import org.bukkit.GameMode;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.PlayerState;
@@ -34,6 +35,7 @@ public final class SpawnCommand implements CommandExecutor {
                         player.teleport(spawnManager.getLobbySpawn());
                         player.setHealth(20);
                         player.setFoodLevel(20);
+                        player.setGameMode(GameMode.SURVIVAL);
                         player.getActivePotionEffects().forEach(e -> {
                             player.removePotionEffect(e.getType());
                         });
