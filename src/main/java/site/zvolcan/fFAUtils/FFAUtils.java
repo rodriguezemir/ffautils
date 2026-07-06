@@ -56,10 +56,16 @@ public class FFAUtils extends JavaPlugin {
         public void onEnable() {
                 instance = this;
 
-                getLogger().info("████████████████████████████████████████████████");
-                getLogger().info("█▓▄▄▓█▓▄▄▓██▀▓██▓▓██▓▄█▓▄▓▄▓█▓▄█▓▄▓███▓▄▄▄▄█");
-                getLogger().info("██▓▄████▓▄████▓▀▓███▓██▓████▓████▓███▓██▀█▄▄▄▄▓█");
-                getLogger().info("▀▄▄▄▀▀▀▄▄▄▀▀▀▄▄▀▄▄▀▀▄▄▄▄▀▀▀▄▄▄▀▀▄▄▄▀▄▄▄▄▄▀▄▄▄▄▄▀");
+                sendConsole("");
+                sendConsole("§b███████╗███████╗ █████╗ §3██╗   ██╗████████╗██╗██╗     ███████╗");
+                sendConsole("§b██╔════╝██╔════╝██╔══██╗§3██║   ██║╚══██╔══╝██║██║     ██╔════╝");
+                sendConsole("§b█████╗  █████╗  ███████║§3██║   ██║   ██║   ██║██║     ███████╗");
+                sendConsole("§b██╔══╝  ██╔══╝  ██╔══██║§3██║   ██║   ██║   ██║██║     ╚════██║");
+                sendConsole("§b██║     ██║     ██║  ██║§3╚██████╔╝   ██║   ██║███████╗███████║");
+                sendConsole("§b╚═╝     ╚═╝     ╚═╝  ╚═╝§3 ╚═════╝    ╚═╝   ╚═╝╚══════╝╚══════╝");
+                sendConsole("");
+                sendConsole("§7Version: §b" + getDescription().getVersion());
+                sendConsole("");
 
                 saveDefaultConfig();
                 utils = new PluginUtils(this,
@@ -69,31 +75,31 @@ public class FFAUtils extends JavaPlugin {
                                                                 "<b><gradient:#5472F4:#27A2C1>FFAUTILS</gradient></b> <dark_gray>⯮</dark_gray> "));
                 spawnManager = new SpawnManager(this);
                 spawnManager.registerSpawns();
-                getLogger().info("Loading Spawns");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Spawns");
                 kitManager = new KitManager(this);
                 kitManager.registerKits();
-                getLogger().info("Loading Kits");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Kits");
                 FastInvManager.register(this);
                 configMenuManager = new ConfigMenuManager(spawnManager, kitManager);
-                getLogger().info("Loading ConfigMenu");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading ConfigMenu");
                 combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks",
                                 getConfig().getLong("duration-combat-log", 15) * 20L));
                 combatLogManager.startCleanupTask();
-                getLogger().info("Loading CombatLog");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading CombatLog");
                 blockedCommandsManager = new BlockedCommandsManager(this);
                 saveResource("blocked-commands.yml", false);
                 blockedCommandsManager.loadBlockedCommands();
-                getLogger().info("Loading BlockedCommands");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading BlockedCommands");
                 lobbyManager = new LobbyManager(this);
-                getLogger().info("Loading LobbyManager");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading LobbyManager");
                 playersManager = new PlayersManager();
-                getLogger().info("Loading PlayersManager");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading PlayersManager");
                 statsManager = new StatsManager(this);
                 statsManager.init();
-                getLogger().info("Loading StatsManager");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading StatsManager");
                 messagesManager = new MessagesManager(this);
                 messagesManager.registerMessages();
-                getLogger().info("Loading Messages");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Messages");
                 if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                         ffaPlaceholders = new FFAPlaceholders(this, statsManager);
                         ffaPlaceholders.register();
@@ -103,7 +109,7 @@ public class FFAUtils extends JavaPlugin {
                 deathEventManager.registerDeathMessages();
                 commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders,
                                 playersManager, configMenuManager, deathEventManager);
-                getLogger().info("Loading Commands");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Commands");
                 getServer().getPluginManager().registerEvents(
                                 new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager,
                                                 statsManager),
@@ -124,7 +130,11 @@ public class FFAUtils extends JavaPlugin {
                 vanishManager = new VanishManager(this, playersManager);
                 getServer().getPluginManager().registerEvents(vanishManager, this);
                 vanishManager.startRefreshTask();
-                getLogger().info("Loading VanishManager");
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading VanishManager");
+        }
+
+        private void sendConsole(String message) {
+                getServer().getConsoleSender().sendMessage(message);
         }
 
         @Override
