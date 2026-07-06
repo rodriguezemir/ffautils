@@ -54,6 +54,9 @@ public class PlayerInteractiveListener implements Listener {
             return;
         FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
 
+        if (ffaPlayer.getLastKit() == null)
+            return;
+
         if (ffaPlayer.getLastKit().getName().equalsIgnoreCase("uhc")) {
             Bukkit.getScheduler().runTaskLater(FFAUtils.getInstance(), () -> {
                 event.getBlock().setType(Material.AIR);
@@ -67,6 +70,9 @@ public class PlayerInteractiveListener implements Listener {
         if (player.getGameMode() == GameMode.CREATIVE)
             return;
         FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
+
+        if (ffaPlayer.getLastKit() == null)
+            return;
 
         if (ffaPlayer.getLastKit().getName().equalsIgnoreCase("uhc")) {
             Material mat = event.getBlock().getType();
@@ -84,6 +90,9 @@ public class PlayerInteractiveListener implements Listener {
             return;
 
         FFAPlayer ffaPlayer = playersManager.getFFAPlayer(player);
+
+        if (ffaPlayer.getLastKit() == null)
+            return;
 
         if (!ffaPlayer.getLastKit().getName().equalsIgnoreCase("uhc"))
             return;
