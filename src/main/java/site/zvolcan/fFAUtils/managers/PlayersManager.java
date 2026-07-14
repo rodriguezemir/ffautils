@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.PlayerState;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +34,11 @@ public final class PlayersManager {
 
     public boolean isPlayerInFFA(@NotNull final Player player) {
         return getFFAPlayer(player).getState() == PlayerState.IN_FFA;
+    }
+
+    @NotNull
+    public Map<UUID, FFAPlayer> getAllPlayers() {
+        return Collections.unmodifiableMap(players);
     }
 
 }

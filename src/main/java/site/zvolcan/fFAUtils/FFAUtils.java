@@ -13,7 +13,6 @@ import site.zvolcan.fFAUtils.listeners.PlayerCommandBlockerListener;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.listeners.PlayerInteractiveListener;
-import site.zvolcan.fFAUtils.listeners.PlayerTotemDeathListener;
 import site.zvolcan.fFAUtils.managers.*;
 import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
 import fr.mrmicky.fastinv.FastInvManager;
@@ -101,7 +100,7 @@ public class FFAUtils extends JavaPlugin {
                 messagesManager.registerMessages();
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Messages");
                 if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                        ffaPlaceholders = new FFAPlaceholders(this, statsManager);
+                        ffaPlaceholders = new FFAPlaceholders(this, statsManager, playersManager);
                         ffaPlaceholders.register();
                 }
                 deathEventManager = new DeathEventManager(this);
@@ -123,9 +122,6 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(new PlayerInteractiveListener(playersManager), this);
                 getServer().getPluginManager().registerEvents(
                                 new PlayerCommandBlockerListener(this), this);
-                getServer().getPluginManager().registerEvents(
-                                new PlayerTotemDeathListener(this, spawnManager, playersManager, lobbyManager),
-                                this);
                 getServer().getPluginManager().registerEvents(new InventorySoundListener(), this);
                 vanishManager = new VanishManager(this, playersManager);
                 getServer().getPluginManager().registerEvents(vanishManager, this);
