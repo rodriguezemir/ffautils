@@ -48,9 +48,6 @@ public class FFAUtils extends JavaPlugin {
         private ConfigMenuManager configMenuManager;
         @Getter
         private BlockedCommandsManager blockedCommandsManager;
-        @Getter
-        private VanishManager vanishManager;
-
         @Override
         public void onEnable() {
                 instance = this;
@@ -123,10 +120,6 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerCommandBlockerListener(this), this);
                 getServer().getPluginManager().registerEvents(new InventorySoundListener(), this);
-                vanishManager = new VanishManager(this, playersManager);
-                getServer().getPluginManager().registerEvents(vanishManager, this);
-                vanishManager.startRefreshTask();
-                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading VanishManager");
         }
 
         private void sendConsole(String message) {
@@ -136,9 +129,6 @@ public class FFAUtils extends JavaPlugin {
         @Override
         public void onDisable() {
                 combatLogManager.stopCleanupTask();
-                if (vanishManager != null) {
-                        vanishManager.stopRefreshTask();
-                }
                 statsManager.close();
                 messagesManager.saveMessages();
         }

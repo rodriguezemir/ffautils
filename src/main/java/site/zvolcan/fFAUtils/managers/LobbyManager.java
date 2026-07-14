@@ -143,7 +143,10 @@ public final class LobbyManager implements Listener {
         }
 
         if (commands.containsKey(item.getType())) {
-            event.getPlayer().performCommand(commands.get(item.getType()));
+            var action = event.getAction();
+            if (action == org.bukkit.event.block.Action.RIGHT_CLICK_AIR || action == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+                event.getPlayer().performCommand(commands.get(item.getType()));
+            }
         }
     }
 

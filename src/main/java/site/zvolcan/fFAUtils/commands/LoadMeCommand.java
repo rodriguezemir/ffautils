@@ -16,6 +16,7 @@ import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
+import site.zvolcan.fFAUtils.objects.PlayerState;
 import site.zvolcan.fFAUtils.objects.Sounds;
 
 import java.util.List;
@@ -88,9 +89,11 @@ public final class LoadMeCommand implements CommandExecutor {
 
                                     kitManager.applyKit(player, kit);
                                     player.teleport(spawn);
+                                    player.setSaturation(0);
 
                                     ffaPlayer.setLastKit(kit);
                                     ffaPlayer.setLastSpawn(spawn);
+                                    ffaPlayer.setState(PlayerState.IN_FFA);
                                     return 1;
                                 })));
 

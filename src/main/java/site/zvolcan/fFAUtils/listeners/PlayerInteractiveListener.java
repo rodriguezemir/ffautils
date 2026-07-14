@@ -110,6 +110,22 @@ public class PlayerInteractiveListener implements Listener {
             if (type == Material.WATER || type == Material.LAVA) {
                 placedBlock.setType(Material.AIR);
             }
+
+            // Remover obsidiana y piedra generadas por el fluido
+            for (Block neighbor : new Block[]{
+                    placedBlock,
+                    placedBlock.getRelative(0, 1, 0),
+                    placedBlock.getRelative(0, -1, 0),
+                    placedBlock.getRelative(1, 0, 0),
+                    placedBlock.getRelative(-1, 0, 0),
+                    placedBlock.getRelative(0, 0, 1),
+                    placedBlock.getRelative(0, 0, -1)
+            }) {
+                Material neighborType = neighbor.getType();
+                if (neighborType == Material.COBBLESTONE || neighborType == Material.OBSIDIAN) {
+                    neighbor.setType(Material.AIR);
+                }
+            }
         }, 20L * 8); // 8 segundos
     }
 
