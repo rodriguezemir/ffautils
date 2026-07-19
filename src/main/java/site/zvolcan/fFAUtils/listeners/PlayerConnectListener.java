@@ -39,7 +39,7 @@ public class PlayerConnectListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player damaged && event.getDamager() instanceof Player) {
             combatLogManager.setInCombat(damaged.getUniqueId());
