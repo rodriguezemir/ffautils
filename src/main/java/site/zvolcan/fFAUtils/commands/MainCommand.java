@@ -19,7 +19,6 @@ import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
 import site.zvolcan.fFAUtils.objects.Sounds;
-import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
 
 public final class MainCommand implements CommandExecutor {
 
@@ -28,18 +27,16 @@ public final class MainCommand implements CommandExecutor {
     private final MessagesManager messagesManager;
     private final KitManager kitManager;
     private final SpawnManager spawnManager;
-    private final ConfigMenuManager configMenuManager;
     private final DeathEventManager deathEventManager;
 
     public MainCommand(PluginUtils utils, FFAPlaceholders ffaPlaceholders, MessagesManager messagesManager,
-            KitManager kitManager, SpawnManager spawnManager, ConfigMenuManager configMenuManager,
+            KitManager kitManager, SpawnManager spawnManager,
             DeathEventManager deathEventManager) {
         this.utils = utils;
         this.ffaPlaceholders = ffaPlaceholders;
         this.messagesManager = messagesManager;
         this.kitManager = kitManager;
         this.spawnManager = spawnManager;
-        this.configMenuManager = configMenuManager;
         this.deathEventManager = deathEventManager;
     }
 
@@ -49,12 +46,6 @@ public final class MainCommand implements CommandExecutor {
 
         literal.requires(ctx -> ctx.getSender() instanceof Player
                 && ctx.getSender().hasPermission("ffautils.commands.ffautils"));
-        literal.executes(ctx -> {
-            CommandSender sender = ctx.getSource().getSender();
-            Player player = (Player) sender;
-            configMenuManager.openMain(player);
-            return 0;
-        });
         literal.then(Commands.literal("reload").executes((ctx) -> {
             CommandSourceStack source = ctx.getSource();
             CommandSender sender = source.getSender();
