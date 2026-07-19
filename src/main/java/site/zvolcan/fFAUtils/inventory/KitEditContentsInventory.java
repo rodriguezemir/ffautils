@@ -142,7 +142,7 @@ public final class KitEditContentsInventory {
             throw new IllegalArgumentException("Invalid skin URL: " + textureUrl, e);
         }
         profile.setTextures(textures);
-        meta.setPlayerProfile(profile);
+        meta.setOwnerProfile(profile);
 
         meta.displayName(text(name));
         List<net.kyori.adventure.text.Component> loreLines = new ArrayList<>();
