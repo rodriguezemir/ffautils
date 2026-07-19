@@ -7,7 +7,8 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import site.zvolcan.fFAUtils.commands.abs.CommandExecutor;
-import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
+import site.zvolcan.fFAUtils.inventory.KitEditorInventory;
+import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
@@ -18,12 +19,12 @@ import site.zvolcan.fFAUtils.FFAUtils;
 public final class KitEditorCommand implements CommandExecutor {
 
     private final FFAUtils plugin;
-    private final ConfigMenuManager configMenuManager;
+    private final KitManager kitManager;
     private final PlayersManager playersManager;
 
-    public KitEditorCommand(FFAUtils plugin, ConfigMenuManager configMenuManager, PlayersManager playersManager) {
+    public KitEditorCommand(FFAUtils plugin, KitManager kitManager, PlayersManager playersManager) {
         this.plugin = plugin;
-        this.configMenuManager = configMenuManager;
+        this.kitManager = kitManager;
         this.playersManager = playersManager;
     }
 
@@ -50,7 +51,7 @@ public final class KitEditorCommand implements CommandExecutor {
                 return 1;
             }
 
-            configMenuManager.openKitEditor(player, 0);
+            new KitEditorInventory(kitManager, 0).open(player);
             return 1;
         });
 

@@ -14,7 +14,7 @@ import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.listeners.PlayerInteractiveListener;
 import site.zvolcan.fFAUtils.managers.*;
-import site.zvolcan.fFAUtils.inventory.ConfigMenuManager;
+import site.zvolcan.fFAUtils.inventory.KitEditContentsInventory;
 import fr.mrmicky.fastinv.FastInvManager;
 
 public class FFAUtils extends JavaPlugin {
@@ -45,8 +45,6 @@ public class FFAUtils extends JavaPlugin {
         @Getter
         private MessagesManager messagesManager;
         @Getter
-        private ConfigMenuManager configMenuManager;
-        @Getter
         private BlockedCommandsManager blockedCommandsManager;
         @Override
         public void onEnable() {
@@ -76,8 +74,6 @@ public class FFAUtils extends JavaPlugin {
                 kitManager.registerKits();
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Kits");
                 FastInvManager.register(this);
-                configMenuManager = new ConfigMenuManager(spawnManager, kitManager);
-                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading ConfigMenu");
                 combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks",
                                 getConfig().getLong("duration-combat-log", 15) * 20L));
                 combatLogManager.startCleanupTask();
@@ -104,7 +100,7 @@ public class FFAUtils extends JavaPlugin {
                 saveResource("death-messages.yml", false);
                 deathEventManager.registerDeathMessages();
                 commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders,
-                                playersManager, configMenuManager, deathEventManager);
+                                playersManager, deathEventManager);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Commands");
                 getServer().getPluginManager().registerEvents(
                                 new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager,
@@ -120,6 +116,7 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerCommandBlockerListener(this), this);
                 getServer().getPluginManager().registerEvents(new InventorySoundListener(), this);
+                getServer().getPluginManager().registerEvents(new KitEditContentsInventory.SessionListener(), this);
         }
 
         private void sendConsole(String message) {
@@ -128,6 +125,8 @@ public class FFAUtils extends JavaPlugin {
 
         @Override
         public void onDisable() {
+                // Give every editing player their real inventory back before shutting down.
+                KitEditContentsInventory.restoreAllSessions();
                 combatLogManager.stopCleanupTask();
                 statsManager.close();
                 messagesManager.saveMessages();
