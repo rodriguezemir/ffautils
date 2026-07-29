@@ -10,8 +10,10 @@ import site.zvolcan.fFAUtils.managers.TierManager.TierAccessResult;
 import site.zvolcan.fFAUtils.managers.TierManager.TierRequirement;
 import site.zvolcan.fFAUtils.objects.TierProfile;
 import site.zvolcan.fFAUtils.objects.TierRanking;
+import site.zvolcan.fFAUtils.providers.EliteStormProvider;
 import site.zvolcan.fFAUtils.providers.McTiersProvider;
 import site.zvolcan.fFAUtils.providers.PvpTiersProvider;
+import site.zvolcan.fFAUtils.providers.TierProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -181,14 +183,38 @@ class TierManagerTest {
     }
 
     @Test
-    void loadSettings_registersBothProvidersWithTheirDefaultUrls() {
+    void loadSettings_registersEveryProviderWithItsDefaultUrl() {
         TierManager manager = new TierManager(plugin);
 
-        assertEquals(2, manager.getProviders().size());
+        assertEquals(3, manager.getProviders().size());
         assertEquals(McTiersProvider.DEFAULT_API_URL,
                 manager.getProvider(McTiersProvider.ID).getSettings().getApiUrl());
         assertEquals(PvpTiersProvider.DEFAULT_API_URL,
                 manager.getProvider(PvpTiersProvider.ID).getSettings().getApiUrl());
+        assertEquals(EliteStormProvider.DEFAULT_API_URL,
+                manager.getProvider(EliteStormProvider.ID).getSettings().getApiUrl());
+    }
+
+    @Test
+    void loadSettings_configuresEliteStormNameLookupAndGuild() {
+        EliteStormProvider provider = (EliteStormProvider) new TierManager(plugin)
+                .getProvider(EliteStormProvider.ID);
+
+        // Names by default, so the gate works on offline-mode servers.
+        assertEquals(TierProvider.LookupMode.NAME, provider.getPreferredLookup());
+        assertEquals(EliteStormProvider.DEFAULT_GUILD_ID, provider.getGuildId());
+    }
+
+    @Test
+    void loadSettings_honoursEliteStormOverrides() {
+        config.set("tiers.providers.elitestorm.lookup-by", "uuid");
+        config.set("tiers.providers.elitestorm.guild-id", "123456789");
+
+        EliteStormProvider provider = (EliteStormProvider) new TierManager(plugin)
+                .getProvider(EliteStormProvider.ID);
+
+        assertEquals(TierProvider.LookupMode.UUID, provider.getPreferredLookup());
+        assertEquals("123456789", provider.getGuildId());
     }
 
     @Test
@@ -209,7 +235,7 @@ class TierManagerTest {
         TierManager manager = new TierManager(plugin);
 
         assertEquals(TierManager.PROVIDER_ANY, manager.getDefaultProvider());
-        assertEquals(2, manager.resolveProviders(null).size(), "\"any\" spans every provider");
+        assertEquals(3, manager.resolveProviders(null).size(), "\"any\" spans every provider");
     }
 
     @Test
@@ -413,10 +439,16 @@ class TierManagerTest {
         assertEquals("PvPTiers", result.getProviderName());
     }
 
+    /** Seeds a definitive "this player is unknown here" on every provider. */
+    private void seedAllAsMisses(TierManager manager, UUID uuid) {
+        manager.getProviders().values().forEach(p -> p.seedCache(uuid, null, false, 60_000L));
+    }
+
     @Test
     void decideAcross_deniesOnlyWhenEveryProviderDenies() {
         TierManager manager = new TierManager(plugin);
         UUID uuid = UUID.randomUUID();
+        seedAllAsMisses(manager, uuid);
         manager.getProvider(McTiersProvider.ID).seedCache(uuid,
                 profileWith("vanilla", new TierRanking(4, TierRanking.HIGH)), false, 60_000L);
         manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
@@ -432,9 +464,9 @@ class TierManagerTest {
     void decideAcross_reportsTheMostInformativeDenial() {
         TierManager manager = new TierManager(plugin);
         UUID uuid = UUID.randomUUID();
-        // No profile at all on MCTiers, but a too-low tier on PvPTiers. Telling
+        // No profile on the other sites, but a too-low tier on PvPTiers. Telling
         // the player their tier is too low beats telling them they are unknown.
-        manager.getProvider(McTiersProvider.ID).seedCache(uuid, null, false, 60_000L);
+        seedAllAsMisses(manager, uuid);
         manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
                 profileWith("sword", new TierRanking(5, TierRanking.LOW)), false, 60_000L);
 
@@ -443,6 +475,48 @@ class TierManagerTest {
         assertEquals(Status.DENIED_TIER, result.getStatus());
         assertEquals("PvPTiers", result.getProviderName());
         assertEquals("LT5", result.getRanking().display());
+    }
+
+    @Test
+    void decideAcross_aDefinitiveDenialOutranksAnUnreachableProvider() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // MCTiers answered and said no; the other two could not be reached.
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(5, TierRanking.LOW)), false, 60_000L);
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertEquals(Status.DENIED_TIER, result.getStatus(),
+                "an outage on one site must not hand out a free pass");
+        assertFalse(result.isAllowed());
+    }
+
+    @Test
+    void decideAcross_failsOpenOnlyWhenNoProviderAnswered() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // Nothing cached anywhere, so every provider counts as unreachable.
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertEquals(Status.ALLOWED_ON_ERROR, result.getStatus());
+        assertTrue(result.isAllowed());
+    }
+
+    @Test
+    void decideAcross_aDefinitiveAllowStillWinsOverEverything() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(5, TierRanking.LOW)), false, 60_000L);
+        manager.getProvider(EliteStormProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(1, TierRanking.HIGH)), false, 60_000L);
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertEquals(Status.ALLOWED, result.getStatus());
+        assertEquals("EliteStorm", result.getProviderName());
     }
 
     @Test

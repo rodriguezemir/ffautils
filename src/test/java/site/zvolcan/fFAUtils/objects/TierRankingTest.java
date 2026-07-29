@@ -116,6 +116,49 @@ class TierRankingTest {
     }
 
     @Test
+    void parse_readsTierLabels() {
+        // EliteStorm reports tiers as labels rather than a tier/position pair.
+        assertEquals(3, TierRanking.parse("HT3").getTier());
+        assertEquals(TierRanking.HIGH, TierRanking.parse("HT3").getPos());
+        assertEquals(4, TierRanking.parse("LT4").getTier());
+        assertEquals(TierRanking.LOW, TierRanking.parse("LT4").getPos());
+    }
+
+    @Test
+    void parse_roundTripsEveryValidLabel() {
+        for (int tier = TierRanking.BEST_TIER; tier <= TierRanking.WORST_TIER; tier++) {
+            for (int pos : new int[] { TierRanking.HIGH, TierRanking.LOW }) {
+                String label = TierRanking.display(tier, pos);
+                TierRanking parsed = TierRanking.parse(label);
+                assertNotNull(parsed, label + " should parse");
+                assertEquals(label, parsed.display());
+                assertTrue(parsed.isValid());
+            }
+        }
+    }
+
+    @Test
+    void parse_isCaseAndWhitespaceInsensitive() {
+        assertEquals("HT3", TierRanking.parse(" ht3 ").display());
+        assertEquals("LT5", TierRanking.parse("lT5").display());
+    }
+
+    @Test
+    void parse_carriesTheRetiredFlag() {
+        TierRanking retired = TierRanking.parse("LT5", true);
+
+        assertTrue(retired.isRetired());
+        assertFalse(TierRanking.parse("LT5", false).isRetired());
+    }
+
+    @Test
+    void parse_rejectsAnythingThatIsNotATierLabel() {
+        for (String bad : new String[] { null, "", "T3", "HT", "HT0", "HT6", "XT3", "HT33", "high tier 3" }) {
+            assertNull(TierRanking.parse(bad), "should not parse: " + bad);
+        }
+    }
+
+    @Test
     void gson_parsesTheApiRankingShape() {
         // Verbatim from GET https://mctiers.com/api/v2/profile/{uuid}
         String json = "{\"tier\":4,\"pos\":1,\"peak_tier\":3,\"peak_pos\":0,"

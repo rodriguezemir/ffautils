@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.zvolcan.fFAUtils.objects.TierProfile;
 import site.zvolcan.fFAUtils.objects.TierRanking;
+import site.zvolcan.fFAUtils.providers.EliteStormProvider;
 import site.zvolcan.fFAUtils.providers.McTiersProvider;
 import site.zvolcan.fFAUtils.providers.PvpTiersProvider;
 import site.zvolcan.fFAUtils.providers.TierProvider;
@@ -139,6 +140,22 @@ public final class TierManager {
         registerProvider(new PvpTiersProvider(httpClient, plugin.getLogger(), providerSettings(
                 providersSection, PvpTiersProvider.ID, PvpTiersProvider.DEFAULT_API_URL,
                 timeout, errorCacheMillis, userAgent)));
+
+        String guildId = EliteStormProvider.DEFAULT_GUILD_ID;
+        boolean lookupByName = true;
+        if (providersSection != null) {
+            guildId = providersSection.getString(EliteStormProvider.ID + ".guild-id",
+                    EliteStormProvider.DEFAULT_GUILD_ID);
+            // Names by default: on offline-mode servers the UUID is local-only.
+            lookupByName = !"uuid".equalsIgnoreCase(
+                    providersSection.getString(EliteStormProvider.ID + ".lookup-by", "nickname"));
+        }
+        registerProvider(new EliteStormProvider(httpClient, plugin.getLogger(), providerSettings(
+                providersSection, EliteStormProvider.ID, EliteStormProvider.DEFAULT_API_URL,
+                timeout, errorCacheMillis, userAgent), guildId, lookupByName));
+
+        // Lets a provider load any vocabulary it needs before players show up.
+        providers.values().forEach(TierProvider::warmUp);
     }
 
     private TierProvider.ProviderSettings providerSettings(@Nullable ConfigurationSection providersSection,
@@ -334,9 +351,11 @@ public final class TierManager {
             return;
         }
 
-        // Query every provider involved in parallel, then fold the answers.
+        // Query every provider involved in parallel, then fold the answers. The
+        // name goes along for providers that resolve players by name.
+        String name = player.getName();
         CompletableFuture<?>[] lookups = targets.stream()
-                .map(provider -> provider.fetchProfile(uuid).exceptionally(error -> null))
+                .map(provider -> provider.fetchProfile(uuid, name).exceptionally(error -> null))
                 .toArray(CompletableFuture[]::new);
         CompletableFuture.allOf(lookups)
                 .whenComplete((ignored, error) -> runOnMain(
@@ -348,19 +367,34 @@ public final class TierManager {
      * provider allows it, otherwise the most informative denial is reported.
      */
     TierAccessResult decideAcross(List<TierProvider> targets, UUID uuid, TierRequirement requirement) {
-        TierAccessResult best = null;
+        TierAccessResult bestDenial = null;
+        TierAccessResult errorResult = null;
+
         for (TierProvider provider : targets) {
             TierAccessResult result = decideFor(provider, uuid, requirement);
-            if (result.isAllowed()) {
+            if (result.getStatus() == Status.ALLOWED) {
                 return result;
             }
-            if (best == null || result.getStatus().denialRank() < best.getStatus().denialRank()) {
-                best = result;
+            if (result.getStatus() == Status.ALLOWED_ON_ERROR || result.getStatus() == Status.DENIED_ERROR) {
+                if (errorResult == null) {
+                    errorResult = result;
+                }
+                continue;
+            }
+            if (bestDenial == null || result.getStatus().denialRank() < bestDenial.getStatus().denialRank()) {
+                bestDenial = result;
             }
         }
-        return best == null
-                ? new TierAccessResult(Status.DENIED_ERROR, requirement, null, null, null)
-                : best;
+
+        // A site that actually answered outranks one we could not reach, so
+        // adding a provider can never weaken the gate: allow-on-error only
+        // applies when no provider gave a definitive answer at all.
+        if (bestDenial != null) {
+            return bestDenial;
+        }
+        return errorResult != null
+                ? errorResult
+                : new TierAccessResult(Status.DENIED_ERROR, requirement, null, null, null);
     }
 
     /** Applies the requirement to one provider's cached answer. */
@@ -456,11 +490,19 @@ public final class TierManager {
 
     /** Warms every relevant provider's cache for a player. */
     public void prefetch(@NotNull UUID uuid) {
+        prefetch(uuid, null);
+    }
+
+    /**
+     * Warms every relevant provider's cache for a player. The name is passed
+     * along so name-resolving providers work on offline-mode servers.
+     */
+    public void prefetch(@NotNull UUID uuid, @Nullable String name) {
         if (!enabled || restrictedSpawns.isEmpty()) {
             return;
         }
         for (TierProvider provider : providersInUse()) {
-            provider.prefetch(uuid);
+            provider.prefetch(uuid, name);
         }
     }
 

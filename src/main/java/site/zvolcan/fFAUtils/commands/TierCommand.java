@@ -159,7 +159,8 @@ public final class TierCommand implements CommandExecutor {
 
         String gamemode = tierManager.getDefaultGamemode();
         for (TierProvider provider : targets) {
-            provider.fetchProfile(target.getUniqueId()).whenComplete((profile, error) -> plugin.getServer()
+            provider.fetchProfile(target.getUniqueId(), target.getName())
+                    .whenComplete((profile, error) -> plugin.getServer()
                     .getScheduler().runTask(plugin, () -> {
                         if (error != null) {
                             message(sender, Sounds.ERROR_SOUND, messages().getMessage(

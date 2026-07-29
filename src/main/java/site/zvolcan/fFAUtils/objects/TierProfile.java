@@ -44,6 +44,19 @@ public final class TierProfile {
         this.rankings = rankings;
     }
 
+    /**
+     * Builds a profile directly, for providers whose payload does not map onto
+     * these fields and has to be translated by hand.
+     */
+    public TierProfile(@Nullable String uuid, @Nullable String name, @Nullable String region, int points,
+            @Nullable Map<String, TierRanking> rankings) {
+        this.uuid = uuid;
+        this.name = name;
+        this.region = region;
+        this.points = points;
+        this.rankings = rankings;
+    }
+
     /** The player's linked Discord ID, or null when not linked. */
     @Nullable
     public String getDiscordId() {

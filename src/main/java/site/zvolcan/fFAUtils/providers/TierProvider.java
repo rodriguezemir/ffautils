@@ -148,6 +148,44 @@ public abstract class TierProvider {
     }
 
     /**
+     * Whether this API can look a player up by name.
+     *
+     * <p>
+     * This matters on offline-mode servers, where the UUID Bukkit hands out is
+     * derived from the name locally and does not match the Mojang UUID the tier
+     * sites are keyed by — so a UUID lookup would never match anyone.
+     */
+    public boolean supportsNameLookup() {
+        return false;
+    }
+
+    /**
+     * Which identifier this provider prefers when both are available. Providers
+     * that can resolve names override this to work on offline-mode servers.
+     */
+    @NotNull
+    public LookupMode getPreferredLookup() {
+        return LookupMode.UUID;
+    }
+
+    /**
+     * The full profile URL for a player name. Only called when
+     * {@link #supportsNameLookup()} is true.
+     */
+    @NotNull
+    protected URI buildProfileUriByName(@NotNull String name) {
+        throw new UnsupportedOperationException(getDisplayName() + " cannot look players up by name");
+    }
+
+    /** How a player is identified to a provider. */
+    public enum LookupMode {
+        /** Look the player up by their UUID. */
+        UUID,
+        /** Look the player up by their name. */
+        NAME
+    }
+
+    /**
      * Translates a configured gamemode into this provider's slug, so one spawn
      * requirement can be evaluated against either site.
      */
@@ -174,6 +212,24 @@ public abstract class TierProvider {
      */
     @NotNull
     public final CompletableFuture<TierProfile> fetchProfile(@NotNull UUID uuid) {
+        return fetchProfile(uuid, null);
+    }
+
+    /**
+     * Resolves a player's profile, identifying them the way this provider
+     * prefers.
+     *
+     * <p>
+     * The result is always cached under the UUID, whichever identifier was sent
+     * on the wire, so one player costs at most one request per TTL regardless of
+     * how they were looked up.
+     *
+     * @param uuid the player's UUID, always used as the cache key
+     * @param name the player's name, used for the request itself when this
+     *             provider prefers names and can resolve them
+     */
+    @NotNull
+    public final CompletableFuture<TierProfile> fetchProfile(@NotNull UUID uuid, @Nullable String name) {
         CachedProfile cached = readCache(uuid);
         if (cached != null) {
             return cached.failed
@@ -181,26 +237,54 @@ public abstract class TierProvider {
                             new IllegalStateException(getDisplayName() + " lookup recently failed"))
                     : CompletableFuture.completedFuture(cached.profile);
         }
-        CompletableFuture<TierProfile> future = inFlight.computeIfAbsent(uuid, this::requestProfile);
+        CompletableFuture<TierProfile> future = inFlight.computeIfAbsent(uuid,
+                key -> requestProfile(key, resolveUri(key, name)));
         // Registered outside computeIfAbsent: removing the entry from within the
         // mapping function would be a recursive update on the same key.
         future.whenComplete((profile, error) -> inFlight.remove(uuid, future));
         return future;
     }
 
+    /**
+     * Picks the URL for a lookup: by name when this provider prefers names, can
+     * resolve them, and one was supplied — otherwise by UUID.
+     */
+    @NotNull
+    private URI resolveUri(@NotNull UUID uuid, @Nullable String name) {
+        boolean useName = supportsNameLookup()
+                && getPreferredLookup() == LookupMode.NAME
+                && name != null
+                && !name.isBlank();
+        return useName ? buildProfileUriByName(name) : buildProfileUri(uuid);
+    }
+
     /** Warms the cache for a player, ignoring the outcome. */
     public final void prefetch(@NotNull UUID uuid) {
+        prefetch(uuid, null);
+    }
+
+    /** Warms the cache for a player, ignoring the outcome. */
+    public final void prefetch(@NotNull UUID uuid, @Nullable String name) {
         if (isCached(uuid)) {
             return;
         }
-        fetchProfile(uuid).exceptionally(error -> null);
+        fetchProfile(uuid, name).exceptionally(error -> null);
     }
 
-    private CompletableFuture<TierProfile> requestProfile(UUID uuid) {
+    /**
+     * Optional startup hook, run once after the provider is built. Providers
+     * that need to load a vocabulary from their API before they can interpret
+     * profiles override this; the default does nothing.
+     */
+    public void warmUp() {
+        // Nothing to do for providers that need no extra state.
+    }
+
+    private CompletableFuture<TierProfile> requestProfile(UUID uuid, URI uri) {
         HttpRequest request;
         try {
             request = HttpRequest.newBuilder()
-                    .uri(buildProfileUri(uuid))
+                    .uri(uri)
                     .timeout(settings.getTimeout())
                     .header("Accept", "application/json")
                     .header("User-Agent", settings.getUserAgent())

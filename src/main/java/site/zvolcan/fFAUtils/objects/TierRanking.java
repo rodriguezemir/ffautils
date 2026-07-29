@@ -117,6 +117,45 @@ public final class TierRanking {
         return tier >= BEST_TIER && tier <= WORST_TIER && (pos == HIGH || pos == LOW);
     }
 
+    /**
+     * Parses a tier label such as {@code HT3} or {@code LT4} back into a
+     * ranking. EliteStorm reports tiers this way rather than as a tier/position
+     * pair, so this is the inverse of {@link #display(int, int)}.
+     *
+     * @param label  the label, case and whitespace insensitive
+     * @param retired whether the player is retired in this gamemode
+     * @return the ranking, or null when the label is not a valid tier
+     */
+    @Nullable
+    public static TierRanking parse(@Nullable String label, boolean retired) {
+        if (label == null) {
+            return null;
+        }
+        String value = label.trim().toUpperCase(java.util.Locale.ROOT);
+        if (value.length() != 3) {
+            return null;
+        }
+        int pos;
+        if (value.startsWith("HT")) {
+            pos = HIGH;
+        } else if (value.startsWith("LT")) {
+            pos = LOW;
+        } else {
+            return null;
+        }
+        char digit = value.charAt(2);
+        if (digit < '0' + BEST_TIER || digit > '0' + WORST_TIER) {
+            return null;
+        }
+        return new TierRanking(digit - '0', pos, null, null, 0L, retired);
+    }
+
+    /** Parses a tier label, treating the player as active. */
+    @Nullable
+    public static TierRanking parse(@Nullable String label) {
+        return parse(label, false);
+    }
+
     /** Renders a tier/position pair the way MCTiers does, e.g. {@code HT3}. */
     @NotNull
     public static String display(int tier, int pos) {

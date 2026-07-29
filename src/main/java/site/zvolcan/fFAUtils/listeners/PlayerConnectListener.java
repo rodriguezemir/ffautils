@@ -57,7 +57,7 @@ public class PlayerConnectListener implements Listener {
         player.teleport(spawnManager.getLobbySpawn());
         // Warm the MCTiers cache so the spawn gate resolves without a round trip.
         if (tierManager != null && tierManager.isPrefetchOnJoin()) {
-            tierManager.prefetch(player.getUniqueId());
+            tierManager.prefetch(player.getUniqueId(), player.getName());
         }
     }
 }
