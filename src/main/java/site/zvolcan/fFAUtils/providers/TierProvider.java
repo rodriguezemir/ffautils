@@ -19,7 +19,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +80,13 @@ public abstract class TierProvider {
     private final Logger logger;
     @Getter
     private final ProviderSettings settings;
+    /**
+     * Where request dispatch happens. Everything HTTP-related — building the
+     * request, initialising the client on first use, handing it to the network
+     * layer — runs here rather than on whichever thread called in, so the
+     * server's main thread never does any of it.
+     */
+    private final Executor executor;
 
     /** UUID -> cached lookup, each entry carrying its own expiry. */
     private final Map<UUID, CachedProfile> cache = new ConcurrentHashMap<>();
@@ -85,9 +95,21 @@ public abstract class TierProvider {
 
     protected TierProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
             @NotNull ProviderSettings settings) {
+        this(httpClient, logger, settings, ForkJoinPool.commonPool());
+    }
+
+    protected TierProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
+            @NotNull ProviderSettings settings, @NotNull Executor executor) {
         this.httpClient = httpClient;
         this.logger = logger;
         this.settings = settings;
+        this.executor = executor;
+    }
+
+    /** The executor every request is dispatched on. Never the main thread. */
+    @NotNull
+    protected final Executor getExecutor() {
+        return executor;
     }
 
     // ------------------------------------------------------------------
@@ -238,7 +260,7 @@ public abstract class TierProvider {
                     : CompletableFuture.completedFuture(cached.profile);
         }
         CompletableFuture<TierProfile> future = inFlight.computeIfAbsent(uuid,
-                key -> requestProfile(key, resolveUri(key, name)));
+                key -> requestProfile(key, name));
         // Registered outside computeIfAbsent: removing the entry from within the
         // mapping function would be a recursive update on the same key.
         future.whenComplete((profile, error) -> inFlight.remove(uuid, future));
@@ -280,22 +302,30 @@ public abstract class TierProvider {
         // Nothing to do for providers that need no extra state.
     }
 
-    private CompletableFuture<TierProfile> requestProfile(UUID uuid, URI uri) {
-        HttpRequest request;
-        try {
-            request = HttpRequest.newBuilder()
-                    .uri(uri)
-                    .timeout(settings.getTimeout())
-                    .header("Accept", "application/json")
-                    .header("User-Agent", settings.getUserAgent())
-                    .GET()
-                    .build();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Invalid " + getDisplayName() + " API URL: " + settings.getApiUrl(), e);
-            return CompletableFuture.failedFuture(e);
-        }
+    /**
+     * Builds a GET for this provider. Called on the executor, never on the
+     * caller's thread.
+     */
+    @NotNull
+    protected final HttpRequest buildRequest(@NotNull URI uri) {
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(settings.getTimeout())
+                .header("Accept", "application/json")
+                .header("User-Agent", settings.getUserAgent())
+                .GET()
+                .build();
+    }
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    private CompletableFuture<TierProfile> requestProfile(UUID uuid, @Nullable String name) {
+        // supplyAsync moves URL building, request construction and the
+        // sendAsync call itself onto the executor. sendAsync does not block,
+        // but it is not free either — the first call initialises the client —
+        // and none of it should land on the thread that asked for a tier.
+        return CompletableFuture
+                .supplyAsync(() -> httpClient.sendAsync(
+                        buildRequest(resolveUri(uuid, name)), HttpResponse.BodyHandlers.ofString()), executor)
+                .thenCompose(Function.identity())
                 .handle((response, error) -> {
                     if (error != null) {
                         cacheFailure(uuid);

@@ -10,7 +10,6 @@ import site.zvolcan.fFAUtils.objects.TierRanking;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -18,6 +17,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,7 +97,13 @@ public final class EliteStormProvider extends TierProvider {
 
     public EliteStormProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
             @NotNull ProviderSettings settings, @NotNull String guildId, boolean lookupByName) {
-        super(httpClient, logger, settings);
+        this(httpClient, logger, settings, java.util.concurrent.ForkJoinPool.commonPool(), guildId, lookupByName);
+    }
+
+    public EliteStormProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
+            @NotNull ProviderSettings settings, @NotNull Executor executor, @NotNull String guildId,
+            boolean lookupByName) {
+        super(httpClient, logger, settings, executor);
         this.httpClient = httpClient;
         this.logger = logger;
         this.guildId = guildId;
@@ -244,22 +252,14 @@ public final class EliteStormProvider extends TierProvider {
      */
     @Override
     public void warmUp() {
-        HttpRequest request;
-        try {
-            request = HttpRequest.newBuilder()
-                    .uri(URI.create(getSettings().getApiUrl() + "/modes?guildId="
-                            + URLEncoder.encode(guildId, StandardCharsets.UTF_8)))
-                    .timeout(getSettings().getTimeout())
-                    .header("Accept", "application/json")
-                    .header("User-Agent", getSettings().getUserAgent())
-                    .GET()
-                    .build();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Invalid EliteStorm modes URL, keeping default gamemode ids", e);
-            return;
-        }
-
-        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        // Runs entirely on the executor: warmUp is called during onEnable, on
+        // the main thread, and must not do any HTTP work there.
+        CompletableFuture
+                .supplyAsync(() -> httpClient.sendAsync(
+                        buildRequest(URI.create(getSettings().getApiUrl() + "/modes?guildId="
+                                + URLEncoder.encode(guildId, StandardCharsets.UTF_8))),
+                        HttpResponse.BodyHandlers.ofString()), getExecutor())
+                .thenCompose(Function.identity())
                 .whenComplete((response, error) -> {
                     if (error != null || response.statusCode() < 200 || response.statusCode() >= 300) {
                         logger.log(Level.WARNING, "Could not load EliteStorm gamemodes for guild " + guildId

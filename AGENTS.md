@@ -66,6 +66,12 @@ src/
 
   MCTiers and PvPTiers return the same JSON shape, so `parseProfile` has a working default they both reuse; EliteStorm overrides it. Slugs are translated between sites via `getGamemodeAliases()` — `vanilla` and `crystal` exist on only one site each and are deliberately not aliased, so a player simply has no ranking there.
 
+  **Threading contract — nothing HTTP-related may touch the main thread.** Every lookup is dispatched with `CompletableFuture.supplyAsync(..., executor)` onto `TierManager`'s dedicated `FFAUtils-Tiers` pool, which is also the `HttpClient`'s executor, so URL building, request construction, the send, response handling and Gson parsing all happen off-tick. Results come back via `TierManager.runOnMain`. Two rules when editing this code:
+  - Never call `HttpClient.close()` — it **blocks** until in-flight requests finish (measured: 5s with one stalled request, i.e. 100 dropped ticks). Use the non-blocking `shutdown()`. Same for `ExecutorService`.
+  - Never call `.join()` / `.get()` on a lookup future from plugin code.
+
+  `TierProviderAsyncTest` enforces both by pointing a provider at a local server that accepts and never answers; anything that blocks blocks for the full timeout and the test fails.
+
   Two EliteStorm specifics worth knowing:
   - It is looked up **by nickname by default**, which is what makes the gate work on offline-mode servers where Bukkit's UUID is generated locally and never matches the Mojang UUID the other sites are keyed by. Results are still cached under the UUID.
   - Its gamemode ids are **scoped to a Discord guild**, so the id → slug vocabulary is loaded from `/v2/modes?guildId=` by the `warmUp()` lifecycle hook. `EliteStormProvider.DEFAULT_MODE_SLUGS` is only correct for `DEFAULT_GUILD_ID` and is a fallback if that call fails.

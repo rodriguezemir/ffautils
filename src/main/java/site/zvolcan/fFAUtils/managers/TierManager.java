@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -61,6 +63,12 @@ public final class TierManager {
     private final Map<String, TierRequirement> restrictedSpawns = new ConcurrentHashMap<>();
 
     private HttpClient httpClient;
+    /**
+     * Dedicated pool for every tier lookup. Daemon threads, so a stuck request
+     * can never hold the JVM open, and separate from the common pool so tier
+     * traffic cannot starve anything else the server runs there.
+     */
+    private ExecutorService executor;
 
     @Getter
     private boolean enabled;
@@ -108,9 +116,17 @@ public final class TierManager {
 
         // The client is rebuilt because the connect timeout is baked into it.
         closeClient();
+        executor = Executors.newFixedThreadPool(2, runnable -> {
+            Thread thread = new Thread(runnable, "FFAUtils-Tiers");
+            thread.setDaemon(true);
+            return thread;
+        });
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .followRedirects(HttpClient.Redirect.NORMAL)
+                // The client runs its callbacks on the same pool, so response
+                // handling and parsing stay off the main thread too.
+                .executor(executor)
                 .build();
 
         buildProviders(section, timeout, errorCacheMillis);
@@ -136,10 +152,10 @@ public final class TierManager {
 
         registerProvider(new McTiersProvider(httpClient, plugin.getLogger(), providerSettings(
                 providersSection, McTiersProvider.ID, McTiersProvider.DEFAULT_API_URL,
-                timeout, errorCacheMillis, userAgent)));
+                timeout, errorCacheMillis, userAgent), executor));
         registerProvider(new PvpTiersProvider(httpClient, plugin.getLogger(), providerSettings(
                 providersSection, PvpTiersProvider.ID, PvpTiersProvider.DEFAULT_API_URL,
-                timeout, errorCacheMillis, userAgent)));
+                timeout, errorCacheMillis, userAgent), executor));
 
         String guildId = EliteStormProvider.DEFAULT_GUILD_ID;
         boolean lookupByName = true;
@@ -152,7 +168,7 @@ public final class TierManager {
         }
         registerProvider(new EliteStormProvider(httpClient, plugin.getLogger(), providerSettings(
                 providersSection, EliteStormProvider.ID, EliteStormProvider.DEFAULT_API_URL,
-                timeout, errorCacheMillis, userAgent), guildId, lookupByName));
+                timeout, errorCacheMillis, userAgent), executor, guildId, lookupByName));
 
         // Lets a provider load any vocabulary it needs before players show up.
         providers.values().forEach(TierProvider::warmUp);
@@ -546,16 +562,30 @@ public final class TierManager {
         closeClient();
     }
 
+    /**
+     * Tears down the HTTP client and its executor without blocking.
+     *
+     * <p>
+     * Deliberately not {@code HttpClient.close()}: that waits for every
+     * in-flight request to finish, which would freeze the caller for up to the
+     * request timeout. This runs on the main thread — from {@code /tiers
+     * reload} and from {@code onDisable} — so it uses the non-blocking
+     * {@code shutdown()} instead and lets pending requests drain on their own.
+     */
     private void closeClient() {
-        if (httpClient == null) {
-            return;
+        if (httpClient != null) {
+            try {
+                httpClient.shutdown();
+            } catch (Exception ignored) {
+                // Nothing useful to do if the client refuses to shut down.
+            }
+            httpClient = null;
         }
-        try {
-            httpClient.close();
-        } catch (Exception ignored) {
-            // Nothing useful to do if the client refuses to shut down cleanly.
+        if (executor != null) {
+            // Also non-blocking: queued tasks run out, no new ones accepted.
+            executor.shutdown();
+            executor = null;
         }
-        httpClient = null;
     }
 
     private void runOnMain(Runnable task) {

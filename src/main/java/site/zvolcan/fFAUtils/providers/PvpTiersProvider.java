@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.http.HttpClient;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 /**
@@ -34,6 +35,11 @@ public final class PvpTiersProvider extends TierProvider {
     public PvpTiersProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
             @NotNull ProviderSettings settings) {
         super(httpClient, logger, settings);
+    }
+
+    public PvpTiersProvider(@NotNull HttpClient httpClient, @NotNull Logger logger,
+            @NotNull ProviderSettings settings, @NotNull Executor executor) {
+        super(httpClient, logger, settings, executor);
     }
 
     @Override
