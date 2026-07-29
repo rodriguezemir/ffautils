@@ -4,3 +4,43 @@ disable-lobby-items: false
 time-combat-log: 15
 
 stats-database-name: stats.db
+
+# Bloqueo de spawns por tiers de MCTiers (https://mctiers.com/docs/v2)
+tiers:
+  # Activa o desactiva el bloqueo. Tambien se puede cambiar en caliente con /tiers toggle
+  enabled: false
+
+  # Base URL de la v2 de la API publica de MCTiers
+  api-url: "https://mctiers.com/api/v2"
+
+  # Gamemode (slug) sobre el que se evalua al jugador: vanilla, sword, axe, pot,
+  # nethop, uhc, smp, mace... Usa "best" para tomar su mejor tier de cualquier gamemode
+  gamemode: "vanilla"
+
+  # Requisito por defecto. tier va de 1 a 5 (menor es mejor) y pos es 0 = high, 1 = low.
+  # tier 3 + pos 0 significa "HT3 o mejor"
+  tier: 3
+  pos: 0
+
+  # Spawns bloqueados. Cada uno puede sobrescribir tier, pos y gamemode
+  restricted-spawns:
+    tryhard:
+      tier: 3
+      pos: 0
+
+  # A los jugadores retirados se les juzga por su peak tier, como recomienda la API
+  use-peak-when-retired: true
+
+  # Si la API no responde: true deja pasar al jugador, false lo bloquea
+  allow-on-error: true
+
+  # Los tiers se guardan en cache por UUID para no pedirlos en cada intento
+  cache-minutes: 30
+  error-cache-minutes: 2
+  timeout-seconds: 5
+
+  # Pide el tier al entrar al servidor para que el check posterior sea instantaneo
+  prefetch-on-join: true
+
+  # Permiso que salta el bloqueo. Dejar vacio para que no lo salte nadie
+  bypass-permission: "ffautils.tiers.bypass"

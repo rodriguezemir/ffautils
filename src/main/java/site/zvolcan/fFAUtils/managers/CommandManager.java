@@ -43,6 +43,7 @@ public final class CommandManager {
                 spawnManager, deathEventManager));
         list.add(new SetSpawnCommand(spawnManager, kitManager, plugin.getUtils()));
         list.add(new KitEditorCommand(plugin, kitManager, playersManager));
+        list.add(new TierCommand(plugin, plugin.getTierManager()));
 
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, (cmd) -> {
             for (CommandExecutor executor : list) {
