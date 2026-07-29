@@ -46,6 +46,8 @@ public class FFAUtils extends JavaPlugin {
         private MessagesManager messagesManager;
         @Getter
         private BlockedCommandsManager blockedCommandsManager;
+        @Getter
+        private TierManager tierManager;
         @Override
         public void onEnable() {
                 instance = this;
@@ -92,6 +94,9 @@ public class FFAUtils extends JavaPlugin {
                 messagesManager = new MessagesManager(this);
                 messagesManager.registerMessages();
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Messages");
+                TierManager.registerMessageDefaults(messagesManager);
+                tierManager = new TierManager(this);
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading TierManager");
                 if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                         ffaPlaceholders = new FFAPlaceholders(this, statsManager, playersManager);
                         ffaPlaceholders.register();
@@ -129,6 +134,9 @@ public class FFAUtils extends JavaPlugin {
                 KitEditContentsInventory.restoreAllSessions();
                 combatLogManager.stopCleanupTask();
                 statsManager.close();
+                if (tierManager != null) {
+                        tierManager.shutdown();
+                }
                 messagesManager.saveMessages();
         }
 }

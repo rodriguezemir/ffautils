@@ -14,3 +14,9 @@ permissions:
   ffautils.bypass-combat-block:
     description: Allows executing blocked commands while in combat
     default: op
+  ffautils.commands.tiers:
+    description: Allows managing the MCTiers spawn gate with /tiers
+    default: op
+  ffautils.tiers.bypass:
+    description: Allows entering tier-restricted spawns regardless of MCTiers rank
+    default: op

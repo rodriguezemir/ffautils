@@ -68,6 +68,20 @@ public final class MessagesManager {
         messages.put(key, value);
     }
 
+    /** Whether a message is currently loaded under this key. */
+    public boolean hasMessage(@NotNull String key) {
+        return messages.containsKey(key);
+    }
+
+    /**
+     * Registers a message only if it is missing. {@code messages.yml} is never
+     * overwritten on update, so messages added by a newer version of the plugin
+     * would otherwise render as "Message not found" on existing installs.
+     */
+    public void addDefault(@NotNull String key, @NotNull String value) {
+        messages.putIfAbsent(key, value);
+    }
+
     public void saveMessages() {
         try {
             File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
