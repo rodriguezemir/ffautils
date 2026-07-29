@@ -31,6 +31,7 @@ src/
       commands/abs/              # CommandExecutor functional interface
       listeners/                 # Bukkit event handlers
       objects/                   # value objects (DeathEvent, Kit, FFAPlayer, etc.)
+      providers/                 # external tier APIs behind the abstract TierProvider
     resources/
       paper-plugin.yml           # plugin descriptor (NOT plugin.yml!)
       config.yml                 # main config
@@ -51,6 +52,16 @@ src/
   - DeathEventManager: **YAML list** via `YamlConfiguration` (`death-messages.yml`)
   - StatsManager: **HikariCP** connection pool to SQL database
 - **PlaceholderAPI**: optional dependency (`required: false`), expansion registered in `onEnable()`.
+- **Tier providers**: `TierProvider` is an abstract class holding everything common to an external tier API — the async `java.net.http.HttpClient` call, Gson parsing into `TierProfile`, and a per-UUID cache with TTL and in-flight de-duplication. Subclasses only declare what differs. The two shipped ones differ in four ways, and getting any of them wrong breaks lookups silently:
+
+| | `McTiersProvider` | `PvpTiersProvider` |
+|---|---|---|
+| Endpoint | `mctiers.com/api/v2/profile/{uuid}` | `pvptiers.com/api/profile/{uuid}` |
+| UUID in path | **with** dashes | **without** dashes (dashed → HTTP 400) |
+| "No profile" | HTTP 404 | HTTP **422** |
+| Gamemode slugs | `nethop`, `vanilla` | `neth_pot`, `crystal` |
+
+  Both APIs return the same JSON shape, so `parseProfile` has a working default that neither subclass overrides. Slugs are translated between sites via `getGamemodeAliases()`; `vanilla` and `crystal` exist on only one site each and are deliberately not aliased.
 
 ## Persistence quirks
 

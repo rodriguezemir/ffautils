@@ -140,14 +140,18 @@ public final class LoadMeCommand implements CommandExecutor {
             gamemode = requirement == null ? "?" : requirement.getGamemode();
         }
 
+        String provider = result.getProviderName();
+
         String message = switch (result.getStatus()) {
-            case DENIED_NO_PROFILE -> messages.getMessage("tier-no-profile");
-            case DENIED_NO_RANKING -> messages.getMessage("tier-no-ranking", "{gamemode}", gamemode);
-            case DENIED_ERROR -> messages.getMessage("tier-lookup-failed");
+            case DENIED_NO_PROFILE -> messages.getMessage("tier-no-profile", "{provider}", provider);
+            case DENIED_NO_RANKING -> messages.getMessage("tier-no-ranking",
+                    "{gamemode}", gamemode, "{provider}", provider);
+            case DENIED_ERROR -> messages.getMessage("tier-lookup-failed", "{provider}", provider);
             default -> messages.getMessage(
                     "tier-blocked",
                     "{required}", requirement == null ? "?" : requirement.display(),
                     "{gamemode}", gamemode,
+                    "{provider}", provider,
                     "{current}", result.getRanking() == null
                             ? "-"
                             : result.getRanking().display(plugin.getTierManager().isUsePeakWhenRetired()));

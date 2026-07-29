@@ -5,16 +5,30 @@ time-combat-log: 15
 
 stats-database-name: stats.db
 
-# Bloqueo de spawns por tiers de MCTiers (https://mctiers.com/docs/v2)
+# Bloqueo de spawns por tiers
 tiers:
   # Activa o desactiva el bloqueo. Tambien se puede cambiar en caliente con /tiers toggle
   enabled: false
 
-  # Base URL de la v2 de la API publica de MCTiers
-  api-url: "https://mctiers.com/api/v2"
+  # De donde se leen los tiers: mctiers, pvptiers, o "any" para dejar entrar
+  # al jugador si CUALQUIERA de los dos lo permite
+  provider: "mctiers"
 
-  # Gamemode (slug) sobre el que se evalua al jugador: vanilla, sword, axe, pot,
-  # nethop, uhc, smp, mace... Usa "best" para tomar su mejor tier de cualquier gamemode
+  providers:
+    # https://mctiers.com/docs/v2 - usa el UUID con guiones
+    mctiers:
+      api-url: "https://mctiers.com/api/v2"
+    # https://pvptiers.com/api/profile/<uuid> - usa el UUID sin guiones
+    pvptiers:
+      api-url: "https://pvptiers.com/api"
+
+  # Gamemode (slug) sobre el que se evalua al jugador. Usa "best" para tomar su
+  # mejor tier de cualquier gamemode.
+  #   mctiers:  vanilla, sword, axe, pot, nethop, uhc, smp, mace
+  #   pvptiers: sword, axe, pot, neth_pot, uhc, smp, mace, crystal
+  # Los slugs equivalentes se traducen solos entre proveedores (nethop <-> neth_pot).
+  # Un gamemode que no existe en un proveedor simplemente no da ranking ahi
+  # (vanilla solo existe en mctiers, crystal solo en pvptiers)
   gamemode: "vanilla"
 
   # Requisito por defecto. tier va de 1 a 5 (menor es mejor) y pos es 0 = high, 1 = low.
@@ -22,11 +36,12 @@ tiers:
   tier: 3
   pos: 0
 
-  # Spawns bloqueados. Cada uno puede sobrescribir tier, pos y gamemode
+  # Spawns bloqueados. Cada uno puede sobrescribir tier, pos, gamemode y provider
   restricted-spawns:
     tryhard:
       tier: 3
       pos: 0
+      provider: "mctiers"
 
   # A los jugadores retirados se les juzga por su peak tier, como recomienda la API
   use-peak-when-retired: true
@@ -34,7 +49,8 @@ tiers:
   # Si la API no responde: true deja pasar al jugador, false lo bloquea
   allow-on-error: true
 
-  # Los tiers se guardan en cache por UUID para no pedirlos en cada intento
+  # Los tiers se guardan en cache por UUID (uno por proveedor) para no pedirlos
+  # en cada intento. Compartido por todos los proveedores
   cache-minutes: 30
   error-cache-minutes: 2
   timeout-seconds: 5

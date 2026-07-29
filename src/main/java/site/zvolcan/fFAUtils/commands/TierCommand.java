@@ -14,18 +14,20 @@ import site.zvolcan.fFAUtils.managers.TierManager;
 import site.zvolcan.fFAUtils.objects.Sounds;
 import site.zvolcan.fFAUtils.objects.TierProfile;
 import site.zvolcan.fFAUtils.objects.TierRanking;
+import site.zvolcan.fFAUtils.providers.TierProvider;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * {@code /tiers} — turns the MCTiers spawn gate on and off and inspects it.
+ * {@code /tiers} — turns the tier spawn gate on and off and inspects it.
  *
  * <ul>
- * <li>{@code /tiers} — current state and the restricted spawns</li>
+ * <li>{@code /tiers} — current state, providers and restricted spawns</li>
  * <li>{@code /tiers on|off|toggle} — enable or disable the gate</li>
  * <li>{@code /tiers reload} — re-read the {@code tiers} config section</li>
  * <li>{@code /tiers cache clear} — drop every cached tier</li>
- * <li>{@code /tiers check <player>} — look up an online player's tier</li>
+ * <li>{@code /tiers check <player> [provider]} — look up a player's tier</li>
  * </ul>
  */
 public final class TierCommand implements CommandExecutor {
@@ -74,18 +76,18 @@ public final class TierCommand implements CommandExecutor {
         })));
 
         literal.then(Commands.literal("check")
-                .then(Commands.argument("player", StringArgumentType.word()).executes(ctx -> {
-                    CommandSender sender = ctx.getSource().getSender();
-                    String targetName = StringArgumentType.getString(ctx, "player");
-                    Player target = plugin.getServer().getPlayerExact(targetName);
-                    if (target == null) {
-                        message(sender, Sounds.ERROR_SOUND,
-                                messages().getMessage("tiers-player-not-found", "{player}", targetName));
-                        return 1;
-                    }
-                    lookup(sender, target);
-                    return 1;
-                })));
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .executes(ctx -> check(ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "player"), null))
+                        .then(Commands.argument("provider", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    tierManager.getProviders().keySet().forEach(builder::suggest);
+                                    builder.suggest(TierManager.PROVIDER_ANY);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> check(ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "player"),
+                                        StringArgumentType.getString(ctx, "provider"))))));
 
         return literal.build();
     }
@@ -102,8 +104,16 @@ public final class TierCommand implements CommandExecutor {
         message(sender, Sounds.SUCCESS_SOUND, messages.getMessage(
                 "tiers-status",
                 "{status}", tierManager.isEnabled() ? "<green>activado</green>" : "<red>desactivado</red>",
-                "{gamemode}", tierManager.getDefaultGamemode(),
-                "{cache}", String.valueOf(tierManager.getCacheSize())));
+                "{provider}", tierManager.getDefaultProvider(),
+                "{gamemode}", tierManager.getDefaultGamemode()));
+
+        for (TierProvider provider : tierManager.getProviders().values()) {
+            message(sender, null, messages.getMessage(
+                    "tiers-status-provider",
+                    "{provider}", provider.getDisplayName(),
+                    "{url}", provider.getSettings().getApiUrl(),
+                    "{cache}", String.valueOf(provider.getCacheSize())));
+        }
 
         Map<String, TierManager.TierRequirement> restricted = tierManager.getRestrictedSpawns();
         if (restricted.isEmpty()) {
@@ -117,55 +127,87 @@ public final class TierCommand implements CommandExecutor {
                     "{required}", requirement.display(),
                     "{gamemode}", TierManager.isAnyGamemode(requirement.getGamemode())
                             ? "cualquiera"
-                            : requirement.getGamemode()));
+                            : requirement.getGamemode(),
+                    "{provider}", requirement.getProvider()));
         }
         return 1;
     }
 
-    /** Resolves the target's tier — from cache when possible — and reports it. */
-    private void lookup(CommandSender sender, Player target) {
+    /** Reports a player's tier on one provider, or on all of them. */
+    private int check(CommandSender sender, String targetName, String providerId) {
+        Player target = plugin.getServer().getPlayerExact(targetName);
+        if (target == null) {
+            message(sender, Sounds.ERROR_SOUND,
+                    messages().getMessage("tiers-player-not-found", "{player}", targetName));
+            return 1;
+        }
+
+        List<TierProvider> targets;
+        if (providerId == null) {
+            targets = tierManager.resolveProviders(null);
+        } else if (TierManager.PROVIDER_ANY.equalsIgnoreCase(providerId)) {
+            targets = List.copyOf(tierManager.getProviders().values());
+        } else {
+            TierProvider provider = tierManager.getProvider(providerId);
+            if (provider == null) {
+                message(sender, Sounds.ERROR_SOUND,
+                        messages().getMessage("tiers-unknown-provider", "{provider}", providerId));
+                return 1;
+            }
+            targets = List.of(provider);
+        }
+
         String gamemode = tierManager.getDefaultGamemode();
-        tierManager.fetchProfile(target.getUniqueId()).whenComplete((profile, error) -> plugin.getServer()
-                .getScheduler().runTask(plugin, () -> {
-                    MessagesManager messages = messages();
-                    if (error != null) {
-                        message(sender, Sounds.ERROR_SOUND,
-                                messages.getMessage("tiers-lookup-failed", "{player}", target.getName()));
-                        return;
-                    }
-                    reportProfile(sender, target.getName(), profile, gamemode);
-                }));
+        for (TierProvider provider : targets) {
+            provider.fetchProfile(target.getUniqueId()).whenComplete((profile, error) -> plugin.getServer()
+                    .getScheduler().runTask(plugin, () -> {
+                        if (error != null) {
+                            message(sender, Sounds.ERROR_SOUND, messages().getMessage(
+                                    "tiers-lookup-failed",
+                                    "{player}", target.getName(),
+                                    "{provider}", provider.getDisplayName()));
+                            return;
+                        }
+                        reportProfile(sender, target.getName(), profile, gamemode, provider);
+                    }));
+        }
+        return 1;
     }
 
-    private void reportProfile(CommandSender sender, String targetName, TierProfile profile, String gamemode) {
+    private void reportProfile(CommandSender sender, String targetName, TierProfile profile, String gamemode,
+            TierProvider provider) {
         MessagesManager messages = messages();
         if (profile == null) {
-            message(sender, Sounds.ERROR_SOUND,
-                    messages.getMessage("tiers-lookup-none", "{player}", targetName));
+            message(sender, Sounds.ERROR_SOUND, messages.getMessage(
+                    "tiers-lookup-none", "{player}", targetName, "{provider}", provider.getDisplayName()));
             return;
         }
 
         boolean usePeak = tierManager.isUsePeakWhenRetired();
+        // Translate the configured gamemode into this provider's own slug.
+        String resolved = TierManager.isAnyGamemode(gamemode) ? gamemode : provider.resolveGamemode(gamemode);
+
         TierRanking ranking;
         String matchedGamemode;
-        if (TierManager.isAnyGamemode(gamemode)) {
+        if (TierManager.isAnyGamemode(resolved)) {
             ranking = profile.getBestRanking(usePeak);
             matchedGamemode = profile.getBestGamemode(usePeak);
         } else {
-            ranking = profile.getRanking(gamemode);
-            matchedGamemode = gamemode;
+            ranking = profile.getRanking(resolved);
+            matchedGamemode = resolved;
         }
 
         if (ranking == null) {
-            message(sender, Sounds.ERROR_SOUND,
-                    messages.getMessage("tiers-lookup-none", "{player}", targetName));
+            message(sender, Sounds.ERROR_SOUND, messages.getMessage(
+                    "tiers-lookup-none", "{player}", targetName, "{provider}", provider.getDisplayName()));
             return;
         }
         message(sender, Sounds.SUCCESS_SOUND, messages.getMessage(
                 "tiers-lookup",
                 "{player}", targetName,
+                "{provider}", provider.getDisplayName(),
                 "{current}", ranking.display(usePeak),
-                "{gamemode}", matchedGamemode == null ? gamemode : matchedGamemode));
+                "{gamemode}", matchedGamemode == null ? resolved : matchedGamemode));
     }
 
     private void message(CommandSender sender, net.kyori.adventure.sound.Sound sound, String message) {

@@ -1,6 +1,7 @@
 package site.zvolcan.fFAUtils.managers;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,8 @@ import site.zvolcan.fFAUtils.managers.TierManager.TierAccessResult;
 import site.zvolcan.fFAUtils.managers.TierManager.TierRequirement;
 import site.zvolcan.fFAUtils.objects.TierProfile;
 import site.zvolcan.fFAUtils.objects.TierRanking;
+import site.zvolcan.fFAUtils.providers.McTiersProvider;
+import site.zvolcan.fFAUtils.providers.PvpTiersProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +42,10 @@ class TierManagerTest {
         plugin = mock(JavaPlugin.class);
         lenient().when(plugin.getConfig()).thenReturn(config);
         lenient().when(plugin.getLogger()).thenReturn(Logger.getLogger("TierManagerTest"));
+
+        // Providers build their User-Agent from the plugin version.
+        PluginDescriptionFile description = new PluginDescriptionFile("FFAUtils", "1.0.0-TEST", "Main");
+        lenient().when(plugin.getDescription()).thenReturn(description);
     }
 
     private TierProfile profileWith(String gamemode, TierRanking ranking) {
@@ -166,11 +173,95 @@ class TierManagerTest {
         TierManager manager = new TierManager(plugin);
 
         assertFalse(manager.isEnabled(), "the gate must be off until turned on");
-        assertEquals(TierManager.DEFAULT_API_URL, manager.getApiUrl());
+        assertEquals(McTiersProvider.ID, manager.getDefaultProvider());
         assertEquals("vanilla", manager.getDefaultGamemode());
         assertTrue(manager.isUsePeakWhenRetired());
         assertTrue(manager.isAllowOnError());
         assertTrue(manager.getRestrictedSpawns().isEmpty());
+    }
+
+    @Test
+    void loadSettings_registersBothProvidersWithTheirDefaultUrls() {
+        TierManager manager = new TierManager(plugin);
+
+        assertEquals(2, manager.getProviders().size());
+        assertEquals(McTiersProvider.DEFAULT_API_URL,
+                manager.getProvider(McTiersProvider.ID).getSettings().getApiUrl());
+        assertEquals(PvpTiersProvider.DEFAULT_API_URL,
+                manager.getProvider(PvpTiersProvider.ID).getSettings().getApiUrl());
+    }
+
+    @Test
+    void loadSettings_selectsTheConfiguredProvider() {
+        config.set("tiers.provider", "pvptiers");
+        assertEquals(PvpTiersProvider.ID, new TierManager(plugin).getDefaultProvider());
+    }
+
+    @Test
+    void loadSettings_fallsBackToMcTiersForAnUnknownProvider() {
+        config.set("tiers.provider", "not-a-site");
+        assertEquals(McTiersProvider.ID, new TierManager(plugin).getDefaultProvider());
+    }
+
+    @Test
+    void loadSettings_acceptsTheAnyProvider() {
+        config.set("tiers.provider", "any");
+        TierManager manager = new TierManager(plugin);
+
+        assertEquals(TierManager.PROVIDER_ANY, manager.getDefaultProvider());
+        assertEquals(2, manager.resolveProviders(null).size(), "\"any\" spans every provider");
+    }
+
+    @Test
+    void resolveProviders_returnsJustTheRequestedProvider() {
+        TierManager manager = new TierManager(plugin);
+        TierRequirement requirement = new TierRequirement("s", "sword", 3, TierRanking.HIGH, PvpTiersProvider.ID);
+
+        assertEquals(1, manager.resolveProviders(requirement).size());
+        assertEquals(PvpTiersProvider.ID, manager.resolveProviders(requirement).get(0).getId());
+    }
+
+    @Test
+    void loadSettings_allowsAPerSpawnProviderOverride() {
+        config.set("tiers.provider", "mctiers");
+        config.set("tiers.restricted-spawns.crystalspawn.provider", "pvptiers");
+        config.set("tiers.restricted-spawns.crystalspawn.gamemode", "crystal");
+        config.set("tiers.restricted-spawns.vanillaspawn.tier", 2);
+
+        TierManager manager = new TierManager(plugin);
+
+        assertEquals(PvpTiersProvider.ID, manager.getRequirement("crystalspawn").getProvider());
+        assertEquals("crystal", manager.getRequirement("crystalspawn").getGamemode());
+        // No override, so the spawn inherits the section default.
+        assertEquals(McTiersProvider.ID, manager.getRequirement("vanillaspawn").getProvider());
+    }
+
+    @Test
+    void loadSettings_fallsBackToTheDefaultForAnUnknownPerSpawnProvider() {
+        config.set("tiers.provider", "pvptiers");
+        config.set("tiers.restricted-spawns.a.provider", "nope");
+
+        assertEquals(PvpTiersProvider.ID, new TierManager(plugin).getRequirement("a").getProvider());
+    }
+
+    @Test
+    void loadSettings_readsPerProviderApiUrlOverrides() {
+        config.set("tiers.providers.mctiers.api-url", "https://mirror.example/api/v2//");
+        config.set("tiers.providers.pvptiers.api-url", "https://mirror.example/pvp/");
+
+        TierManager manager = new TierManager(plugin);
+
+        assertEquals("https://mirror.example/api/v2",
+                manager.getProvider(McTiersProvider.ID).getSettings().getApiUrl());
+        assertEquals("https://mirror.example/pvp",
+                manager.getProvider(PvpTiersProvider.ID).getSettings().getApiUrl());
+    }
+
+    @Test
+    void loadSettings_fallsBackToTheDefaultApiUrlWhenBlank() {
+        config.set("tiers.providers.mctiers.api-url", "   ");
+        assertEquals(McTiersProvider.DEFAULT_API_URL,
+                new TierManager(plugin).getProvider(McTiersProvider.ID).getSettings().getApiUrl());
     }
 
     @Test
@@ -287,16 +378,131 @@ class TierManagerTest {
         assertFalse(config.getBoolean("tiers.enabled"));
     }
 
-    @Test
-    void loadSettings_stripsTrailingSlashesFromTheApiUrl() {
-        config.set("tiers.api-url", "https://mctiers.com/api/v2///");
-        assertEquals("https://mctiers.com/api/v2", new TierManager(plugin).getApiUrl());
+    // ------------------------------------------------------------------
+    // "any" provider: fold several answers into one decision
+    // ------------------------------------------------------------------
+
+    /** A requirement of HT3 in {@code gamemode}, spanning every provider. */
+    private TierRequirement anyProviderRequirement(String gamemode) {
+        return new TierRequirement("tryhard", gamemode, 3, TierRanking.HIGH, TierManager.PROVIDER_ANY);
+    }
+
+    /**
+     * Evaluates an "any provider" requirement the way
+     * {@link TierManager#checkAccess} does: the provider list comes from the
+     * requirement, not from the manager's default.
+     */
+    private TierAccessResult decideAny(TierManager manager, UUID uuid, String gamemode) {
+        TierRequirement requirement = anyProviderRequirement(gamemode);
+        return manager.decideAcross(manager.resolveProviders(requirement), uuid, requirement);
     }
 
     @Test
-    void loadSettings_fallsBackToTheDefaultApiUrlWhenBlank() {
-        config.set("tiers.api-url", "   ");
-        assertEquals(TierManager.DEFAULT_API_URL, new TierManager(plugin).getApiUrl());
+    void decideAcross_letsThePlayerInIfAnyProviderAllows() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // Ranked on PvPTiers only — as happens for crystal, which MCTiers lacks.
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid, null, false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
+                profileWith("crystal", new TierRanking(1, TierRanking.HIGH)), false, 60_000L);
+
+        TierAccessResult result = decideAny(manager, uuid, "crystal");
+
+        assertTrue(result.isAllowed());
+        assertEquals(Status.ALLOWED, result.getStatus());
+        assertEquals("PvPTiers", result.getProviderName());
+    }
+
+    @Test
+    void decideAcross_deniesOnlyWhenEveryProviderDenies() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(4, TierRanking.HIGH)), false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(5, TierRanking.LOW)), false, 60_000L);
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertFalse(result.isAllowed());
+        assertEquals(Status.DENIED_TIER, result.getStatus());
+    }
+
+    @Test
+    void decideAcross_reportsTheMostInformativeDenial() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // No profile at all on MCTiers, but a too-low tier on PvPTiers. Telling
+        // the player their tier is too low beats telling them they are unknown.
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid, null, false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
+                profileWith("sword", new TierRanking(5, TierRanking.LOW)), false, 60_000L);
+
+        TierAccessResult result = decideAny(manager, uuid, "sword");
+
+        assertEquals(Status.DENIED_TIER, result.getStatus());
+        assertEquals("PvPTiers", result.getProviderName());
+        assertEquals("LT5", result.getRanking().display());
+    }
+
+    @Test
+    void decideAcross_translatesTheGamemodeSlugPerProvider() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // The same player, the same gamemode, spelled differently by each site.
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid,
+                profileWith("nethop", new TierRanking(4, TierRanking.LOW)), false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
+                profileWith("neth_pot", new TierRanking(2, TierRanking.HIGH)), false, 60_000L);
+
+        // Configured with the MCTiers spelling; PvPTiers must still match.
+        TierAccessResult result = decideAny(manager, uuid, "nethop");
+
+        assertEquals(Status.ALLOWED, result.getStatus());
+        assertEquals("PvPTiers", result.getProviderName());
+        assertEquals("HT2", result.getRanking().display());
+    }
+
+    @Test
+    void decideAcross_treatsAnUncachedProviderAsAFailedLookup() {
+        config.set("tiers.allow-on-error", false);
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        // Nothing seeded anywhere, so every provider counts as unreachable.
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertEquals(Status.DENIED_ERROR, result.getStatus());
+        assertFalse(result.isAllowed());
+    }
+
+    @Test
+    void decideAcross_failsOpenWhenConfiguredTo() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+
+        TierAccessResult result = decideAny(manager, uuid, "vanilla");
+
+        assertEquals(Status.ALLOWED_ON_ERROR, result.getStatus());
+        assertTrue(result.isAllowed());
+    }
+
+    @Test
+    void decideAcross_withOneProviderUsesOnlyThatProvider() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(4, TierRanking.HIGH)), false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid,
+                profileWith("vanilla", new TierRanking(1, TierRanking.HIGH)), false, 60_000L);
+
+        TierRequirement mcOnly = new TierRequirement("tryhard", "vanilla", 3, TierRanking.HIGH, McTiersProvider.ID);
+        TierAccessResult result = manager.decideAcross(
+                manager.resolveProviders(mcOnly), uuid, mcOnly);
+
+        assertEquals(Status.DENIED_TIER, result.getStatus(),
+                "a pinned provider must not be rescued by the other site");
+        assertEquals("MCTiers", result.getProviderName());
     }
 
     // ------------------------------------------------------------------
@@ -304,12 +510,38 @@ class TierManagerTest {
     // ------------------------------------------------------------------
 
     @Test
-    void cache_startsEmptyAndReportsMisses() {
+    void cache_startsEmptyAcrossEveryProvider() {
         TierManager manager = new TierManager(plugin);
         UUID uuid = UUID.randomUUID();
 
-        assertFalse(manager.isCached(uuid));
-        assertNull(manager.getCachedProfile(uuid));
+        assertEquals(0, manager.getCacheSize());
+        manager.getProviders().values().forEach(provider -> {
+            assertFalse(provider.isCached(uuid));
+            assertNull(provider.getCachedProfile(uuid));
+        });
+    }
+
+    @Test
+    void getCacheSize_sumsAcrossProviders() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+
+        manager.getProvider(McTiersProvider.ID).seedCache(uuid, null, false, 60_000L);
+        manager.getProvider(PvpTiersProvider.ID).seedCache(uuid, null, false, 60_000L);
+
+        assertEquals(2, manager.getCacheSize());
+        assertEquals(2, manager.clearCache());
+        assertEquals(0, manager.getCacheSize());
+    }
+
+    @Test
+    void invalidate_dropsThePlayerFromEveryProvider() {
+        TierManager manager = new TierManager(plugin);
+        UUID uuid = UUID.randomUUID();
+        manager.getProviders().values().forEach(p -> p.seedCache(uuid, null, false, 60_000L));
+
+        manager.invalidate(uuid);
+
         assertEquals(0, manager.getCacheSize());
     }
 
