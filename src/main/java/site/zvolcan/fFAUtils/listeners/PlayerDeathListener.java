@@ -113,6 +113,7 @@ public class PlayerDeathListener implements Listener {
         event.setRespawnLocation(spawnManager.getLobbySpawn());
         Player player = event.getPlayer();
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            player.setSaturation(0);
             lobbyManager.addLobbyItems(player);
         }, 1L);
     }
