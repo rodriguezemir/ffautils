@@ -31,6 +31,7 @@ src/
       commands/abs/              # CommandExecutor functional interface
       listeners/                 # Bukkit event handlers
       objects/                   # value objects (DeathEvent, Kit, FFAPlayer, etc.)
+      providers/                 # external tier APIs behind the abstract TierProvider
     resources/
       paper-plugin.yml           # plugin descriptor (NOT plugin.yml!)
       config.yml                 # main config
@@ -51,6 +52,29 @@ src/
   - DeathEventManager: **YAML list** via `YamlConfiguration` (`death-messages.yml`)
   - StatsManager: **HikariCP** connection pool to SQL database
 - **PlaceholderAPI**: optional dependency (`required: false`), expansion registered in `onEnable()`.
+- **Tier providers**: `TierProvider` is an abstract class holding everything common to an external tier API — the async `java.net.http.HttpClient` call, Gson parsing into `TierProfile`, and a per-UUID cache with TTL and in-flight de-duplication. Subclasses only declare what differs. Every one of these differences breaks lookups **silently** if got wrong, so verify against the live API when touching them:
+
+| | `McTiersProvider` | `PvpTiersProvider` | `EliteStormProvider` |
+|---|---|---|---|
+| Endpoint | `mctiers.com/api/v2/profile/{uuid}` | `pvptiers.com/api/profile/{uuid}` | `api.elitestorm.es/v2/users?nickname=` / `?uuid=` |
+| Player id | path segment | path segment | **query parameter** |
+| UUID form | **with** dashes | **without** (dashed → 400) | **without** (dashed → 422) |
+| "No profile" | 404 | **422** | 404 (422 here means *bad query*, not unknown player) |
+| Name lookup | no | no | **yes, preferred** |
+| Payload | map of slug → `{tier,pos}` | same | **array of `{mode,tier:"LT4",isRetired}`** |
+| Gamemode slugs | `nethop`, `vanilla` | `neth_pot`, `crystal` | numeric ids, guild-scoped |
+
+  MCTiers and PvPTiers return the same JSON shape, so `parseProfile` has a working default they both reuse; EliteStorm overrides it. Slugs are translated between sites via `getGamemodeAliases()` — `vanilla` and `crystal` exist on only one site each and are deliberately not aliased, so a player simply has no ranking there.
+
+  **Threading contract — nothing HTTP-related may touch the main thread.** Every lookup is dispatched with `CompletableFuture.supplyAsync(..., executor)` onto `TierManager`'s dedicated `FFAUtils-Tiers` pool, which is also the `HttpClient`'s executor, so URL building, request construction, the send, response handling and Gson parsing all happen off-tick. Results come back via `TierManager.runOnMain`. Two rules when editing this code:
+  - Never call `HttpClient.close()` — it **blocks** until in-flight requests finish (measured: 5s with one stalled request, i.e. 100 dropped ticks). Use the non-blocking `shutdown()`. Same for `ExecutorService`.
+  - Never call `.join()` / `.get()` on a lookup future from plugin code.
+
+  `TierProviderAsyncTest` enforces both by pointing a provider at a local server that accepts and never answers; anything that blocks blocks for the full timeout and the test fails.
+
+  Two EliteStorm specifics worth knowing:
+  - It is looked up **by nickname by default**, which is what makes the gate work on offline-mode servers where Bukkit's UUID is generated locally and never matches the Mojang UUID the other sites are keyed by. Results are still cached under the UUID.
+  - Its gamemode ids are **scoped to a Discord guild**, so the id → slug vocabulary is loaded from `/v2/modes?guildId=` by the `warmUp()` lifecycle hook. `EliteStormProvider.DEFAULT_MODE_SLUGS` is only correct for `DEFAULT_GUILD_ID` and is a fallback if that call fails.
 
 ## Persistence quirks
 

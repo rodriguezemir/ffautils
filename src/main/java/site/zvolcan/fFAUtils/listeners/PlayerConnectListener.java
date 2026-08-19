@@ -17,6 +17,7 @@ public class PlayerConnectListener implements Listener {
     private final PlayersManager playersManager;
     private final SpawnManager spawnManager;
     private final StatsManager statsManager;
+    private final TierManager tierManager;
 
     public PlayerConnectListener(@NotNull FFAUtils plugin, LobbyManager lobbyManager, PlayersManager playersManager,
             SpawnManager spawnManager, StatsManager statsManager) {
@@ -25,6 +26,7 @@ public class PlayerConnectListener implements Listener {
         this.combatLogManager = plugin.getCombatLogManager();
         this.spawnManager = spawnManager;
         this.statsManager = statsManager;
+        this.tierManager = plugin.getTierManager();
     }
 
     @EventHandler
@@ -53,5 +55,9 @@ public class PlayerConnectListener implements Listener {
         playersManager.createPlayer(player);
         lobbyManager.addLobbyItems(player);
         player.teleport(spawnManager.getLobbySpawn());
+        // Warm the MCTiers cache so the spawn gate resolves without a round trip.
+        if (tierManager != null && tierManager.isPrefetchOnJoin()) {
+            tierManager.prefetch(player.getUniqueId(), player.getName());
+        }
     }
 }

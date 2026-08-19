@@ -14,6 +14,7 @@ import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 import site.zvolcan.fFAUtils.managers.PlayersManager;
 import site.zvolcan.fFAUtils.managers.SpawnManager;
+import site.zvolcan.fFAUtils.managers.TierManager;
 import site.zvolcan.fFAUtils.objects.FFAPlayer;
 import site.zvolcan.fFAUtils.objects.Kit;
 import site.zvolcan.fFAUtils.objects.PlayerState;
@@ -83,20 +84,79 @@ public final class LoadMeCommand implements CommandExecutor {
                                         return 1;
                                     }
 
-                                    player.getActivePotionEffects().forEach(e -> {
-                                        player.removePotionEffect(e.getType());
+                                    // MCTiers gate: the spawn may require a minimum tier.
+                                    // Resolved from cache when possible, otherwise the
+                                    // callback runs once the API lookup completes.
+                                    TierManager tierManager = plugin.getTierManager();
+                                    if (tierManager == null) {
+                                        enterSpawn(player, ffaPlayer, kit, spawn);
+                                        return 1;
+                                    }
+                                    if (!tierManager.isResolvedImmediately(player, spawnName)) {
+                                        plugin.getUtils().message(player, false,
+                                                MessagesManager.getInstance().getMessage("tier-checking"));
+                                    }
+                                    tierManager.checkAccess(player, spawnName, result -> {
+                                        if (!result.isAllowed()) {
+                                            sendTierDenial(player, result);
+                                            return;
+                                        }
+                                        // The lookup may have taken a moment — they could be gone.
+                                        if (!player.isOnline()) {
+                                            return;
+                                        }
+                                        enterSpawn(player, ffaPlayer, kit, spawn);
                                     });
-
-                                    kitManager.applyKit(player, kit);
-                                    player.teleport(spawn);
-                                    player.setSaturation(0);
-
-                                    ffaPlayer.setLastKit(kit);
-                                    ffaPlayer.setLastSpawn(spawn);
-                                    ffaPlayer.setState(PlayerState.IN_FFA);
                                     return 1;
                                 })));
 
         return literal.build();
+    }
+
+    /** Applies the kit and drops the player into the spawn. */
+    private void enterSpawn(Player player, FFAPlayer ffaPlayer, Kit kit, Location spawn) {
+        player.getActivePotionEffects().forEach(e -> {
+            player.removePotionEffect(e.getType());
+        });
+
+        kitManager.applyKit(player, kit);
+        player.teleport(spawn);
+        player.setSaturation(0);
+
+        ffaPlayer.setLastKit(kit);
+        ffaPlayer.setLastSpawn(spawn);
+        ffaPlayer.setState(PlayerState.IN_FFA);
+    }
+
+    /** Explains to the player why the tier gate turned them away. */
+    private void sendTierDenial(Player player, TierManager.TierAccessResult result) {
+        if (!player.isOnline()) {
+            return;
+        }
+        MessagesManager messages = MessagesManager.getInstance();
+        TierManager.TierRequirement requirement = result.getRequirement();
+        String gamemode = result.getGamemode();
+        if (gamemode == null || gamemode.isEmpty()) {
+            gamemode = requirement == null ? "?" : requirement.getGamemode();
+        }
+
+        String provider = result.getProviderName();
+
+        String message = switch (result.getStatus()) {
+            case DENIED_NO_PROFILE -> messages.getMessage("tier-no-profile", "{provider}", provider);
+            case DENIED_NO_RANKING -> messages.getMessage("tier-no-ranking",
+                    "{gamemode}", gamemode, "{provider}", provider);
+            case DENIED_ERROR -> messages.getMessage("tier-lookup-failed", "{provider}", provider);
+            default -> messages.getMessage(
+                    "tier-blocked",
+                    "{required}", requirement == null ? "?" : requirement.display(),
+                    "{gamemode}", gamemode,
+                    "{provider}", provider,
+                    "{current}", result.getRanking() == null
+                            ? "-"
+                            : result.getRanking().display(plugin.getTierManager().isUsePeakWhenRetired()));
+        };
+
+        plugin.getUtils().message(player, Sounds.ERROR_SOUND, message);
     }
 }

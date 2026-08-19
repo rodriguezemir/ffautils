@@ -40,3 +40,23 @@ killstreak-gained: "{player} consiguio una racha de {kills} kills."
 
 # Interact players
 interact-player-actionbar: "<gray>Ping {player}: <white> {ping}"
+
+# Tier spawn blocking (MCTiers / PvPTiers)
+tier-checking: "<gray>Verificando tu tier..."
+tier-blocked: "<red>Necesitas ser <white>{required}</white> o mejor en <white>{gamemode}</white> para entrar a este spawn. <gray>(tu tier en {provider}: {current})</gray>"
+tier-no-profile: "<red>No tienes un perfil en <white>{provider}</white>, no puedes entrar a este spawn."
+tier-no-ranking: "<red>No estas rankeado en <white>{gamemode}</white> en <white>{provider}</white>, no puedes entrar a este spawn."
+tier-lookup-failed: "<red>No se pudo verificar tu tier en <white>{provider}</white>. Intentalo de nuevo."
+tiers-enabled: "<green>El bloqueo de spawns por tiers ha sido activado."
+tiers-disabled: "<yellow>El bloqueo de spawns por tiers ha sido desactivado."
+tiers-status: "<gray>Bloqueo por tiers: {status} <dark_gray>|</dark_gray> <gray>proveedor: <white>{provider}</white> <dark_gray>|</dark_gray> <gray>gamemode: <white>{gamemode}</white>"
+tiers-status-provider: "<dark_gray> - <white>{provider}</white> <gray>{url} <dark_gray>(cache: {cache})</dark_gray>"
+tiers-status-spawn: "<dark_gray> - <white>{spawn}</white> <gray>requiere <white>{required}</white> en <white>{gamemode}</white> <dark_gray>via</dark_gray> <white>{provider}</white>"
+tiers-status-no-spawns: "<gray>No hay spawns restringidos configurados."
+tiers-reloaded: "<green>Configuracion de tiers recargada."
+tiers-cache-cleared: "<green>Cache de tiers limpiada ({entries} entradas)."
+tiers-lookup: "<gray>{player} en <white>{provider}</white>: <white>{current}</white> en <white>{gamemode}</white>"
+tiers-lookup-none: "<red>{player} no tiene tiers en {provider}."
+tiers-lookup-failed: "<red>No se pudo consultar el tier de {player} en {provider}."
+tiers-player-not-found: "<red>El jugador {player} no esta conectado."
+tiers-unknown-provider: "<red>Proveedor desconocido: {provider}."
