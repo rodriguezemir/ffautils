@@ -9,6 +9,7 @@ kit-not-allowed-for-spawn: "<red>El kit seleccionado no se encuentra permitido p
 kit-added-to-spawn: "<green>Kit {kit} added to spawn {spawn}."
 kit-removed-from-spawn: "<green>Kit {kit} removed from spawn {spawn}."
 spawn-not-found: "<red>Spawn {spawn} not found."
+spawn-no-permission: "<red>No tienes permiso para entrar a este spawn."
 spawn-deleted: "<green>Spawn {spawn} deleted."
 player-already-in-ffa: "<red>You are already in the FFA!"
 

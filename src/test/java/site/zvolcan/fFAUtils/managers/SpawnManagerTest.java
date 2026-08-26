@@ -3,6 +3,7 @@ package site.zvolcan.fFAUtils.managers;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +25,7 @@ import com.google.gson.GsonBuilder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for SpawnManager YAML file format and business logic.
@@ -453,6 +455,24 @@ class SpawnManagerTest {
         Location loc = new Location(world, 0, 0, 0);
         SpawnManager.SpawnData data = new SpawnManager.SpawnData(loc, Arrays.asList("archer", "warrior"));
         assertThrows(UnsupportedOperationException.class, () -> data.getAllowedKits().add("mage"));
+    }
+
+    @Test
+    void getSpawnPermission_usesNormalizedSpawnName() {
+        assertEquals("ffautils.spawn.arena1", SpawnManager.getSpawnPermission("Arena1"));
+    }
+
+    @Test
+    void getConfiguredSpawnPermission_readsIndividualArenaPermission() {
+        JavaPlugin plugin = mock(JavaPlugin.class);
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("spawn-permissions.arenas.Arena1", "arena.access.one");
+        when(plugin.getConfig()).thenReturn(config);
+
+        SpawnManager manager = new SpawnManager(plugin);
+
+        assertEquals("arena.access.one", manager.getConfiguredSpawnPermission("arena1"));
+        assertNull(manager.getConfiguredSpawnPermission("arena2"));
     }
 
     @Test
