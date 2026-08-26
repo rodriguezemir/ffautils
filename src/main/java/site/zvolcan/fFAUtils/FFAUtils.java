@@ -94,6 +94,8 @@ public class FFAUtils extends JavaPlugin {
                 messagesManager = new MessagesManager(this);
                 messagesManager.registerMessages();
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Messages");
+                messagesManager.addDefault("spawn-no-permission",
+                                "<red>No tienes permiso para entrar a este spawn.");
                 TierManager.registerMessageDefaults(messagesManager);
                 tierManager = new TierManager(this);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading TierManager");

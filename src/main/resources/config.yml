@@ -5,6 +5,18 @@ time-combat-log: 15
 
 stats-database-name: stats.db
 
+# Bloqueo de spawns por permisos. Si esta activado, cada spawn requiere
+# ffautils.spawn.<nombre> por defecto. Puedes definir permisos individuales
+# para arenas concretas en la lista de abajo. Si la lista no esta vacia,
+# solo las arenas listadas quedan restringidas.
+spawn-permissions:
+  enabled: false
+  arenas: {}
+  # Ejemplo:
+  # arenas:
+  #   arena1: "ffautils.spawn.arena1"
+  #   arena2: "arena.access.two"
+
 # Bloqueo de spawns por tiers
 tiers:
   # Activa o desactiva el bloqueo. Tambien se puede cambiar en caliente con /tiers toggle

@@ -84,6 +84,15 @@ public final class LoadMeCommand implements CommandExecutor {
                                         return 1;
                                     }
 
+                                    String spawnPermission = spawnManager.getConfiguredSpawnPermission(spawnName);
+                                    if (plugin.getConfig().getBoolean("spawn-permissions.enabled", false)
+                                            && spawnPermission != null
+                                            && !player.hasPermission(spawnPermission)) {
+                                        plugin.getUtils().message(player, Sounds.ERROR_SOUND,
+                                                MessagesManager.getInstance().getMessage("spawn-no-permission"));
+                                        return 1;
+                                    }
+
                                     // MCTiers gate: the spawn may require a minimum tier.
                                     // Resolved from cache when possible, otherwise the
                                     // callback runs once the API lookup completes.

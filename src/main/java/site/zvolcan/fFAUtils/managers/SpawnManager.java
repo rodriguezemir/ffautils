@@ -3,6 +3,7 @@ package site.zvolcan.fFAUtils.managers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -25,9 +27,11 @@ public class SpawnManager {
     private final JavaPlugin plugin;
 
     private final Map<String, SpawnData> spawns = new HashMap<>();
+    private final Map<String, String> configuredSpawnPermissions = new HashMap<>();
 
     public SpawnManager(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
+        loadSpawnPermissions();
     }
 
     /**
@@ -93,6 +97,15 @@ public class SpawnManager {
         return data == null ? null : data.getAllowedKits();
     }
 
+    /** Returns the configured permission for a spawn, or the default permission when no list is configured. */
+    @Nullable
+    public String getConfiguredSpawnPermission(@NotNull String spawnName) {
+        if (configuredSpawnPermissions.isEmpty()) {
+            return getSpawnPermission(spawnName);
+        }
+        return configuredSpawnPermissions.get(spawnName.toLowerCase(Locale.ROOT));
+    }
+
     /**
      * Adds a kit to the spawn's allowed list (lowercased). No-op if already
      * present.
@@ -137,6 +150,12 @@ public class SpawnManager {
     /** Checks if a spawn exists by name */
     public boolean spawnExists(String name) {
         return spawns.containsKey(name);
+    }
+
+    /** Returns the permission node used to enter a named spawn. */
+    @NotNull
+    public static String getSpawnPermission(@NotNull String spawnName) {
+        return "ffautils.spawn." + spawnName.toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -184,6 +203,7 @@ public class SpawnManager {
 
     /** Loads all spawns from the spawns folder */
     public void loadAllSpawns() {
+        loadSpawnPermissions();
         spawns.clear();
 
         File dataFolder = plugin.getDataFolder();
@@ -246,6 +266,23 @@ public class SpawnManager {
     /** Registers spawns - loads all spawns from file */
     public void registerSpawns() {
         loadAllSpawns();
+    }
+
+    /** Loads the optional per-arena permission mapping from config.yml. */
+    private void loadSpawnPermissions() {
+        configuredSpawnPermissions.clear();
+        ConfigurationSection section = plugin.getConfig()
+                .getConfigurationSection("spawn-permissions.arenas");
+        if (section == null) {
+            return;
+        }
+
+        for (String spawnName : section.getKeys(false)) {
+            String permission = section.getString(spawnName);
+            if (permission != null && !permission.isBlank()) {
+                configuredSpawnPermissions.put(spawnName.toLowerCase(Locale.ROOT), permission);
+            }
+        }
     }
 
     /** Persists each spawn to its own file in the spawns folder */
