@@ -13,6 +13,7 @@ import site.zvolcan.fFAUtils.listeners.PlayerCommandBlockerListener;
 import site.zvolcan.fFAUtils.listeners.PlayerConnectListener;
 import site.zvolcan.fFAUtils.listeners.PlayerDeathListener;
 import site.zvolcan.fFAUtils.listeners.PlayerInteractiveListener;
+import site.zvolcan.fFAUtils.listeners.PlayerRegionListener;
 import site.zvolcan.fFAUtils.managers.*;
 import site.zvolcan.fFAUtils.inventory.KitEditContentsInventory;
 import fr.mrmicky.fastinv.FastInvManager;
@@ -28,6 +29,8 @@ public class FFAUtils extends JavaPlugin {
         private SpawnManager spawnManager;
         @Getter
         private KitManager kitManager;
+        @Getter
+        private RegionManager regionManager;
         @Getter
         private CombatLogManager combatLogManager;
         @Getter
@@ -75,6 +78,9 @@ public class FFAUtils extends JavaPlugin {
                 kitManager = new KitManager(this);
                 kitManager.registerKits();
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Kits");
+                regionManager = new RegionManager(this);
+                regionManager.registerRegions();
+                sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Regions");
                 FastInvManager.register(this);
                 combatLogManager = new CombatLogManager(this, getConfig().getLong("combatlog.timeout-ticks",
                                 getConfig().getLong("duration-combat-log", 15) * 20L));
@@ -96,6 +102,20 @@ public class FFAUtils extends JavaPlugin {
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Messages");
                 messagesManager.addDefault("spawn-no-permission",
                                 "<red>No tienes permiso para entrar a este spawn.");
+                messagesManager.addDefault("region-corner-set",
+                                "<green>Esquina <yellow>{corner}</yellow> de la región del kit <yellow>{kit}</yellow> establecida. Usa /kitregion {kit} pos{other} para completarla.");
+                messagesManager.addDefault("region-saved",
+                                "<green>Región del kit <yellow>{kit}</yellow> guardada.");
+                messagesManager.addDefault("region-deleted",
+                                "<green>Región del kit <yellow>{kit}</yellow> eliminada.");
+                messagesManager.addDefault("region-not-found",
+                                "<red>El kit <yellow>{kit}</yellow> no tiene región definida.");
+                messagesManager.addDefault("region-world-mismatch",
+                                "<red>Las dos esquinas deben estar en el mismo mundo.");
+                messagesManager.addDefault("region-info",
+                                "<gray>Región de <yellow>{kit}</yellow><gray>: mundo <yellow>{world}</yellow>, min (<yellow>{min}</yellow>), max (<yellow>{max}</yellow>).");
+                messagesManager.addDefault("region-limit-reached",
+                                "<red>¡Has llegado al límite de la zona de este kit!");
                 TierManager.registerMessageDefaults(messagesManager);
                 tierManager = new TierManager(this);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading TierManager");
@@ -106,8 +126,8 @@ public class FFAUtils extends JavaPlugin {
                 deathEventManager = new DeathEventManager(this);
                 saveResource("death-messages.yml", false);
                 deathEventManager.registerDeathMessages();
-                commandManager = new CommandManager(this, kitManager, spawnManager, lobbyManager, ffaPlaceholders,
-                                playersManager, deathEventManager);
+                commandManager = new CommandManager(this, kitManager, spawnManager, regionManager, lobbyManager,
+                                ffaPlaceholders, playersManager, deathEventManager);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Commands");
                 getServer().getPluginManager().registerEvents(
                                 new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager,
@@ -123,6 +143,7 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerCommandBlockerListener(this), this);
                 getServer().getPluginManager().registerEvents(new InventorySoundListener(), this);
+                getServer().getPluginManager().registerEvents(new PlayerRegionListener(this), this);
                 getServer().getPluginManager().registerEvents(new KitEditContentsInventory.SessionListener(), this);
         }
 
