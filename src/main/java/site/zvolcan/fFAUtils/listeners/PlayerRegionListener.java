@@ -37,7 +37,7 @@ public class PlayerRegionListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Location from = event.getFrom();
-        Location to = event.getLocation() == null ? event.getTo() : event.getTo();
+        Location to = event.getTo();
         if (to == null || (from.getBlockX() == to.getBlockX()
                 && from.getBlockY() == to.getBlockY()
                 && from.getBlockZ() == to.getBlockZ())) {
