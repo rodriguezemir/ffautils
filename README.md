@@ -1,6 +1,13 @@
-# FFAUtils
+# FFAUtils: Minecraft Paper PvP and FFA Plugin
 
-A free-for-all utilities plugin for **Paper 1.21.4**: kits, multiple spawns, combat logging, stats, and spawn access gated by a player's PvP tier from MCTiers, PvPTiers or EliteStorm.
+FFAUtils is an open-source **Minecraft PvP and free-for-all (FFA) plugin for Paper 1.21.4**. It provides configurable kits, arenas and spawns, combat logging, player statistics, tier-gated PvP access, and first-to-ten (`/fto10`) duels for competitive Minecraft servers.
+
+[![Minecraft 1.21.4](https://img.shields.io/badge/Minecraft-1.21.4-62B47A?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Paper](https://img.shields.io/badge/Server-Paper-ED8936)](https://papermc.io/)
+[![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)](https://adoptium.net/)
+[![License MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](LICENSE)
+
+**Repository tags:** `minecraft-plugin` `paper-plugin` `minecraft-pvp` `ffa-server` `pvp-arena` `minecraft-kits` `placeholderapi` `java`
 
 ![Build](https://github.com/rodriguezemir/ffautils/actions/workflows/build.yml/badge.svg)
 
@@ -12,6 +19,7 @@ A free-for-all utilities plugin for **Paper 1.21.4**: kits, multiple spawns, com
 - **Multiple spawns** — name any location as a spawn, and optionally restrict which kits may be used there.
 - **Tier-gated spawns** — require a minimum PvP tier (for example *HT3 or better*) to enter a spawn, resolved from MCTiers, PvPTiers or EliteStorm. See [Tier-gated spawns](#tier-gated-spawns).
 - **Combat log** — players tagged in combat are killed on quit and cannot run configured commands while tagged.
+- **Fto10 duels** — challenge another player to a first-to-ten series using the same kit and spawn, with round scores, external damage protection, and automatic forfeit wins.
 - **Lobby items** — a configurable hotbar for players in the lobby, plus a respawn item for players who died with a kit loaded.
 - **Stats** — kills, deaths and K/D stored in SQLite, exposed through PlaceholderAPI.
 - **Death messages** — a configurable pool of broadcast messages, with killstreak announcements.
@@ -45,6 +53,10 @@ Every permission defaults to operators.
 | `/dead` | *none* | Kill yourself. |
 | `/kit <name>` | `ffautils.commands.kit` | Apply a kit. |
 | `/kit list` | `ffautils.commands.kit` | List available kits. |
+| `/fto10 invite <player>` | *none* | Invite a player to a first-to-ten duel using your current kit and spawn. |
+| `/fto10 accept <player>` | *none* | Accept a Fto10 invitation from a player. |
+| `/fto10 deny <player>` | *none* | Reject a Fto10 invitation. |
+| `/fto10 leave <player>` | *none* | Leave a duel and award the win to the other player. |
 
 ### Administration
 
