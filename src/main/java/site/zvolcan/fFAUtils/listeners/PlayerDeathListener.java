@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
 import site.zvolcan.fFAUtils.managers.DeathEventManager;
+import site.zvolcan.fFAUtils.managers.Fto10Manager;
 import site.zvolcan.fFAUtils.managers.KitManager;
 import site.zvolcan.fFAUtils.managers.LobbyManager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
@@ -29,10 +30,18 @@ public class PlayerDeathListener implements Listener {
     private final PlayersManager playersManager;
     private final LobbyManager lobbyManager;
     private final KitManager kitManager;
+    private final Fto10Manager fto10Manager;
 
     public PlayerDeathListener(FFAUtils plugin, DeathEventManager deathEventManager, SpawnManager spawnManager,
                                CombatLogManager combatLogManager, StatsManager statsManager, PlayersManager playersManager,
                                LobbyManager lobbyManager, KitManager kitManager) {
+        this(plugin, deathEventManager, spawnManager, combatLogManager, statsManager, playersManager,
+                lobbyManager, kitManager, null);
+    }
+
+    public PlayerDeathListener(FFAUtils plugin, DeathEventManager deathEventManager, SpawnManager spawnManager,
+                               CombatLogManager combatLogManager, StatsManager statsManager, PlayersManager playersManager,
+                               LobbyManager lobbyManager, KitManager kitManager, Fto10Manager fto10Manager) {
         this.plugin = plugin;
         this.deathEventManager = deathEventManager;
         this.spawnManager = spawnManager;
@@ -41,6 +50,7 @@ public class PlayerDeathListener implements Listener {
         this.playersManager = playersManager;
         this.lobbyManager = lobbyManager;
         this.kitManager = kitManager;
+        this.fto10Manager = fto10Manager;
     }
 
     static boolean isMilestone(int killstreak) {
@@ -50,6 +60,9 @@ public class PlayerDeathListener implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         final Player player = event.getPlayer();
+        if (fto10Manager != null && fto10Manager.handleDeath(event)) {
+            return;
+        }
         event.deathMessage(null);
         deathEventManager.broadcastDeathEvent(player, player.getKiller());
         combatLogManager.removeFromCombat(player.getUniqueId());
@@ -110,6 +123,9 @@ public class PlayerDeathListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
+        if (fto10Manager != null && fto10Manager.handleRespawn(event)) {
+            return;
+        }
         event.setRespawnLocation(spawnManager.getLobbySpawn());
         Player player = event.getPlayer();
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {

@@ -18,6 +18,7 @@ public class PlayerConnectListener implements Listener {
     private final SpawnManager spawnManager;
     private final StatsManager statsManager;
     private final TierManager tierManager;
+    private final Fto10Manager fto10Manager;
 
     public PlayerConnectListener(@NotNull FFAUtils plugin, LobbyManager lobbyManager, PlayersManager playersManager,
             SpawnManager spawnManager, StatsManager statsManager) {
@@ -27,11 +28,15 @@ public class PlayerConnectListener implements Listener {
         this.spawnManager = spawnManager;
         this.statsManager = statsManager;
         this.tierManager = plugin.getTierManager();
+        this.fto10Manager = plugin.getFto10Manager();
     }
 
     @EventHandler
     public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         final Player player = event.getPlayer();
+        if (fto10Manager != null) {
+            fto10Manager.handleQuit(player);
+        }
         playersManager.removePlayer(player);
         statsManager.unloadPlayer(player.getUniqueId());
         lobbyManager.clearPendingRespawn(player.getUniqueId());
@@ -43,9 +48,15 @@ public class PlayerConnectListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Player damaged && event.getDamager() instanceof Player) {
-            combatLogManager.setInCombat(damaged.getUniqueId());
-            combatLogManager.setInCombat(event.getDamager().getUniqueId());
+        if (event.getEntity() instanceof Player damaged) {
+            if (fto10Manager != null && fto10Manager.shouldCancelDamage(damaged, event)) {
+                event.setCancelled(true);
+                return;
+            }
+            if (event.getDamager() instanceof Player damager) {
+                combatLogManager.setInCombat(damaged.getUniqueId());
+                combatLogManager.setInCombat(damager.getUniqueId());
+            }
         }
     }
 

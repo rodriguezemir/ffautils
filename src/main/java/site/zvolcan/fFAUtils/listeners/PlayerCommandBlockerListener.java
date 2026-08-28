@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import site.zvolcan.fFAUtils.FFAUtils;
 import site.zvolcan.fFAUtils.managers.BlockedCommandsManager;
 import site.zvolcan.fFAUtils.managers.CombatLogManager;
+import site.zvolcan.fFAUtils.managers.Fto10Manager;
 import site.zvolcan.fFAUtils.managers.MessagesManager;
 
 /**
@@ -23,11 +24,13 @@ public class PlayerCommandBlockerListener implements Listener {
     private final FFAUtils plugin;
     private final CombatLogManager combatLogManager;
     private final BlockedCommandsManager blockedCommandsManager;
+    private final Fto10Manager fto10Manager;
 
     public PlayerCommandBlockerListener(@NotNull FFAUtils plugin) {
         this.plugin = plugin;
         this.combatLogManager = plugin.getCombatLogManager();
         this.blockedCommandsManager = plugin.getBlockedCommandsManager();
+        this.fto10Manager = plugin.getFto10Manager();
     }
 
     @EventHandler
@@ -43,6 +46,14 @@ public class PlayerCommandBlockerListener implements Listener {
         String label = (space == -1 ? body : body.substring(0, space)).toLowerCase();
 
         Player player = event.getPlayer();
+        if (fto10Manager != null && fto10Manager.isInMatch(player.getUniqueId())
+                && (label.equals("spawn") || label.equals("loadme") || label.equals("kit")
+                || label.equals("lobby"))) {
+            event.setCancelled(true);
+            plugin.getUtils().message(player, false,
+                    MessagesManager.getInstance().getMessage("fto10-command-blocked"));
+            return;
+        }
         if (!combatLogManager.isInCombat(player.getUniqueId())) {
             return;
         }
