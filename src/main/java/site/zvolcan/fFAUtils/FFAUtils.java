@@ -51,6 +51,8 @@ public class FFAUtils extends JavaPlugin {
         private BlockedCommandsManager blockedCommandsManager;
         @Getter
         private TierManager tierManager;
+        @Getter
+        private Fto10Manager fto10Manager;
         @Override
         public void onEnable() {
                 instance = this;
@@ -116,6 +118,40 @@ public class FFAUtils extends JavaPlugin {
                                 "<gray>Región de <yellow>{kit}</yellow><gray>: mundo <yellow>{world}</yellow>, min (<yellow>{min}</yellow>), max (<yellow>{max}</yellow>).");
                 messagesManager.addDefault("region-limit-reached",
                                 "<red>¡Has llegado al límite de la zona de este kit!");
+                messagesManager.addDefault("fto10-player-not-found",
+                                "<red>El jugador <yellow>{player}</yellow> no esta conectado.");
+                messagesManager.addDefault("fto10-invite-sent",
+                                "<green>Has invitado a <yellow>{player}</yellow> a un Fto10.");
+                messagesManager.addDefault("fto10-invite-received",
+                                "<yellow>{player}</yellow> te ha invitado a un Fto10. Usa <white>/fto10 accept {player}</white> o <white>/fto10 deny {player}</white>.");
+                messagesManager.addDefault("fto10-invite-denied",
+                                "<yellow>{player}</yellow> ha rechazado la invitacion de Fto10.");
+                messagesManager.addDefault("fto10-invite-denied-by-you",
+                                "<green>Has rechazado la invitacion de Fto10 de <yellow>{player}</yellow>.");
+                messagesManager.addDefault("fto10-started",
+                                "<green>Fto10 iniciado contra <yellow>{player}</yellow>.");
+                messagesManager.addDefault("fto10-score",
+                                "<aqua>Fto10 <white>{first}</white> <yellow>{first_score}</yellow> - <yellow>{second_score}</yellow> <white>{second}</white>");
+                messagesManager.addDefault("fto10-actionbar",
+                                "<head:{player}:true> <green>{points} <gray>- <red>{enemy-points} <reset><head:{enemy}:true>");
+                messagesManager.addDefault("fto10-round-finished",
+                                "<gold>Ronda para <yellow>{winner}</yellow>. Marcador: <white>{winner_score} - {loser_score}</white>.");
+                messagesManager.addDefault("fto10-finished",
+                                "<green>Fto10 terminado: <yellow>{winner}</yellow> gano <white>{winner_score} - {loser_score}</white> contra <yellow>{loser}</yellow>.");
+                messagesManager.addDefault("fto10-cannot-challenge-yourself",
+                                "<red>No puedes retarte a ti mismo.");
+                messagesManager.addDefault("fto10-not-in-ffa",
+                                "<red>Debes estar dentro de un Spawn y Kit para invitar a un Fto10.");
+                messagesManager.addDefault("fto10-already-busy",
+                                "<red>Tu o el jugador seleccionado ya esta en un Fto10.");
+                messagesManager.addDefault("fto10-no-invitation",
+                                "<red>No tienes una invitacion de Fto10 de <yellow>{player}</yellow>.");
+                messagesManager.addDefault("fto10-wrong-player",
+                                "<red>Debes indicar al rival de tu Fto10.");
+                messagesManager.addDefault("fto10-not-in-match",
+                                "<red>No estas en un Fto10.");
+                messagesManager.addDefault("fto10-command-blocked",
+                                "<red>No puedes salir o cambiar tu kit durante un Fto10. Usa <white>/fto10 leave</white> con el nombre de tu rival.");
                 TierManager.registerMessageDefaults(messagesManager);
                 tierManager = new TierManager(this);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading TierManager");
@@ -126,8 +162,9 @@ public class FFAUtils extends JavaPlugin {
                 deathEventManager = new DeathEventManager(this);
                 saveResource("death-messages.yml", false);
                 deathEventManager.registerDeathMessages();
+                fto10Manager = new Fto10Manager(this, playersManager, kitManager, lobbyManager);
                 commandManager = new CommandManager(this, kitManager, spawnManager, regionManager, lobbyManager,
-                                ffaPlaceholders, playersManager, deathEventManager);
+                                ffaPlaceholders, playersManager, deathEventManager, fto10Manager);
                 sendConsole("§8[§bFFAUtils§8] §a✔ §7Loading Commands");
                 getServer().getPluginManager().registerEvents(
                                 new PlayerConnectListener(this, lobbyManager, playersManager, spawnManager,
@@ -137,7 +174,7 @@ public class FFAUtils extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(
                                 new PlayerDeathListener(this, deathEventManager, spawnManager, combatLogManager,
                                                 statsManager,
-                                                playersManager, lobbyManager, kitManager),
+                                                playersManager, lobbyManager, kitManager, fto10Manager),
                                 this);
                 getServer().getPluginManager().registerEvents(new PlayerInteractiveListener(playersManager), this);
                 getServer().getPluginManager().registerEvents(
@@ -155,6 +192,9 @@ public class FFAUtils extends JavaPlugin {
         public void onDisable() {
                 // Give every editing player their real inventory back before shutting down.
                 KitEditContentsInventory.restoreAllSessions();
+                if (fto10Manager != null) {
+                        fto10Manager.shutdown();
+                }
                 combatLogManager.stopCleanupTask();
                 statsManager.close();
                 if (tierManager != null) {
