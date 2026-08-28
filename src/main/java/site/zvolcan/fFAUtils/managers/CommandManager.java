@@ -19,11 +19,12 @@ public final class CommandManager {
     private final FFAPlaceholders ffaPlaceholders;
     private final PlayersManager playersManager;
     private final DeathEventManager deathEventManager;
+    private final Fto10Manager fto10Manager;
 
     public CommandManager(FFAUtils plugin, KitManager kitManager, SpawnManager spawnManager, RegionManager regionManager,
             LobbyManager lobbyManager,
             FFAPlaceholders ffaPlaceholders, PlayersManager playersManager,
-            DeathEventManager deathEventManager) {
+            DeathEventManager deathEventManager, Fto10Manager fto10Manager) {
         this.plugin = plugin;
         this.kitManager = kitManager;
         this.spawnManager = spawnManager;
@@ -32,6 +33,7 @@ public final class CommandManager {
         this.ffaPlaceholders = ffaPlaceholders;
         this.playersManager = playersManager;
         this.deathEventManager = deathEventManager;
+        this.fto10Manager = fto10Manager;
         registerCommands();
     }
 
@@ -48,6 +50,7 @@ public final class CommandManager {
         list.add(new KitEditorCommand(plugin, kitManager, playersManager));
         list.add(new RegionCommand(plugin, kitManager, regionManager));
         list.add(new TierCommand(plugin, plugin.getTierManager()));
+        list.add(new Fto10Command(plugin, fto10Manager));
 
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, (cmd) -> {
             for (CommandExecutor executor : list) {
