@@ -171,7 +171,7 @@ class PlayerDeathListenerTest {
 
         FFAPlayer victimFfa = new FFAPlayer(victimUuid);
         victimFfa.setState(PlayerState.IN_FFA);
-        victimFfa.setKillstreak(7);
+        victimFfa.setKillstreak(5);
         when(playersManager.getFFAPlayer(victim)).thenReturn(victimFfa);
 
         try (var mockedFfa = mockStatic(FFAUtils.class)) {
@@ -183,7 +183,7 @@ class PlayerDeathListenerTest {
 
             String expectedMsg = "{player} perdio una racha de {kills} kills."
                     .replace("{player}", "Steve")
-                    .replace("{kills}", "7");
+                    .replace("{kills}", "5");
             verify(utils).broadcast(false, expectedMsg);
             assertEquals(0, victimFfa.getKillstreak(),
                     "Victim killstreak must be reset to 0 after death");
