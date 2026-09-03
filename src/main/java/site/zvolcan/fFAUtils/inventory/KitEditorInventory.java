@@ -31,6 +31,10 @@ public class KitEditorInventory extends FastInv {
 
         Map<String, Kit> allKits = kitManager.getAllKits();
         List<Map.Entry<String, Kit>> kitList = new ArrayList<>(allKits.entrySet());
+        kitList.sort((left, right) -> {
+            int caseInsensitive = left.getKey().compareToIgnoreCase(right.getKey());
+            return caseInsensitive != 0 ? caseInsensitive : left.getKey().compareTo(right.getKey());
+        });
 
         int totalPages = Math.max(1, (int) Math.ceil((double) kitList.size() / ITEMS_PER_PAGE));
         final int page = Math.max(0, Math.min(requestedPage, totalPages - 1));
@@ -52,7 +56,7 @@ public class KitEditorInventory extends FastInv {
 
                 ItemStack item = new ItemStack(Material.CHEST);
                 ItemMeta meta = item.getItemMeta();
-                meta.displayName(text("<white>" + name + "</white>"));
+                meta.displayName(plainText(name));
                 List<Component> lore = new ArrayList<>();
                 lore.add(text("<gray>" + countItems(kit) + " items</gray>"));
                 lore.add(text("<yellow>Click to edit</yellow>"));
@@ -62,7 +66,7 @@ public class KitEditorInventory extends FastInv {
                 setItem(PAGE_START_SLOT + (i - start), item, e -> {
                     Player clicker = (Player) e.getWhoClicked();
                     playClick(clicker);
-                    new KitDetailInventory(kitManager, name).open(clicker);
+                    new KitDetailInventory(kitManager, name, page).open(clicker);
                 });
             }
         }
@@ -115,6 +119,11 @@ public class KitEditorInventory extends FastInv {
 
     static Component text(String miniMessage) {
         return MiniMessage.miniMessage().deserialize(miniMessage).decoration(TextDecoration.ITALIC, false);
+    }
+
+    /** Renders externally supplied values without interpreting them as MiniMessage tags. */
+    static Component plainText(String value) {
+        return Component.text(value).decoration(TextDecoration.ITALIC, false);
     }
 
     static void playClick(Player player) {

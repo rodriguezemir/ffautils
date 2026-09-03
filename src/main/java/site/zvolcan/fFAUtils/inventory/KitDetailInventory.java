@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static site.zvolcan.fFAUtils.inventory.KitEditorInventory.countItems;
+import static site.zvolcan.fFAUtils.inventory.KitEditorInventory.plainText;
 import static site.zvolcan.fFAUtils.inventory.KitEditorInventory.playClick;
 import static site.zvolcan.fFAUtils.inventory.KitEditorInventory.text;
 
@@ -26,14 +27,14 @@ public class KitDetailInventory extends FastInv {
     private static final int DELETE_SLOT = 15;
     private static final int BACK_SLOT = 22;
 
-    public KitDetailInventory(KitManager kitManager, String kitName) {
+    public KitDetailInventory(KitManager kitManager, String kitName, int returnPage) {
         super(27, "Kit: " + kitName);
 
         Kit kit = kitManager.getKit(kitName);
 
         ItemStack summary = new ItemStack(Material.CHEST);
         ItemMeta summaryMeta = summary.getItemMeta();
-        summaryMeta.displayName(text("<white>" + kitName + "</white>"));
+        summaryMeta.displayName(plainText(kitName));
         List<Component> summaryLore = new ArrayList<>();
         summaryLore.add(text("<gray>" + (kit == null ? 0 : countItems(kit)) + " items</gray>"));
         summaryMeta.lore(summaryLore);
@@ -49,6 +50,12 @@ public class KitDetailInventory extends FastInv {
         edit.setItemMeta(editMeta);
         setItem(EDIT_SLOT, edit, e -> {
             Player clicker = (Player) e.getWhoClicked();
+            if (kitManager.getKit(kitName) == null) {
+                FFAUtils.getInstance().getUtils().message(clicker, Sounds.ERROR_SOUND,
+                        "<red>This kit no longer exists.</red>");
+                new KitEditorInventory(kitManager, returnPage).open(clicker);
+                return;
+            }
             playClick(clicker);
             KitEditContentsInventory.open(FFAUtils.getInstance(), kitManager, clicker, kitName);
         });
@@ -69,10 +76,15 @@ public class KitDetailInventory extends FastInv {
                 return;
             }
             playClick(clicker);
-            kitManager.deleteKit(kitName);
+            if (!kitManager.deleteKit(kitName)) {
+                FFAUtils.getInstance().getUtils().message(clicker, Sounds.ERROR_SOUND,
+                        "<red>This kit no longer exists.</red>");
+                new KitEditorInventory(kitManager, returnPage).open(clicker);
+                return;
+            }
             FFAUtils.getInstance().getUtils().message(clicker, Sounds.SUCCESS_SOUND,
                     "<green>Kit <white>" + kitName + "</white> deleted.</green>");
-            new KitEditorInventory(kitManager, 0).open(clicker);
+            new KitEditorInventory(kitManager, returnPage).open(clicker);
         });
 
         ItemStack back = new ItemStack(Material.ARROW);
@@ -82,7 +94,7 @@ public class KitDetailInventory extends FastInv {
         setItem(BACK_SLOT, back, e -> {
             Player clicker = (Player) e.getWhoClicked();
             playClick(clicker);
-            new KitEditorInventory(kitManager, 0).open(clicker);
+            new KitEditorInventory(kitManager, returnPage).open(clicker);
         });
     }
 }
