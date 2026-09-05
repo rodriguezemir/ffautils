@@ -48,10 +48,15 @@ class CombatDamageIntegrationTest {
         combatLogManager = new CombatLogManager(mockPlugin, 200L);
         when(mockPlugin.getCombatLogManager()).thenReturn(combatLogManager);
 
+        // MessagesManager is a singleton read via getInstance(): instantiate it
+        // so setInCombat can resolve "combat-enter" without tripping over null.
+        new MessagesManager(mockPlugin);
+
         // Stub utility methods that MockBukkit internals or the listener
         // might call during event registration / propagation.
         when(mockPlugin.getName()).thenReturn("MockFFAUtils");
         when(mockPlugin.getLogger()).thenReturn(Logger.getLogger("MockFFAUtils"));
+        when(mockPlugin.getServer()).thenReturn(server);
 
         // PluginUtils — lenient, not exercised by our test path
         me.putindeer.api.util.PluginUtils utils;

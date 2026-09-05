@@ -27,15 +27,13 @@ public class CombatLogManager {
     public void setInCombat(@NotNull UUID playerId) {
         long currentTime = System.currentTimeMillis();
         Long time = combatEndTimes.put(playerId, currentTime + (combatTimeoutTicks * 50L));
-        if (time == null)
+        if (time != null)
             return;
 
-        if (!combatEndTimes.containsKey(playerId)) {
-            plugin.getUtils().message(
-                    plugin.getServer().getPlayer(playerId),
-                    false,
-                    MessagesManager.getInstance().getMessage("combat-enter"));
-        }
+        plugin.getUtils().message(
+                plugin.getServer().getPlayer(playerId),
+                false,
+                MessagesManager.getInstance().getMessage("combat-enter"));
     }
 
     /** Checks if player is currently in combat */
